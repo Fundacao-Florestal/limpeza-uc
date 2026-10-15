@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Limpeza UC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Limpeza das UCs</h1>
+      <p>Diagnóstico por estrutura, aprovação pelo Gerente e painel gerencial · Fundação Florestal</p>
+    </div>
+    <div class="tr"><div class="sync" id="sync"><span class="dot off"></span><span>Conectando…</span></div><div class="sync" id="whoami"></div></div>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="main"></main>
+</div>
+<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<!-- Firebase (SDK) e configuração do projeto -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+// Hot reload do "npm run dev" (scripts/dev.mjs). Só em localhost; publicado, não faz nada.
+if (["localhost", "127.0.0.1"].includes(location.hostname)) {
+  const es = new EventSource("http://localhost:35729");
+  es.onmessage = (e) => {
+    if (e.data !== "css") return location.reload();
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+      const u = new URL(l.href);
+      if (u.origin === location.origin) { u.searchParams.set("v", Date.now()); l.href = u; }
+    });
+  };
+  es.onerror = () => { if (es.readyState === EventSource.CLOSED) es.close(); };
+}
+</script>
+
+<!-- App: a ordem importa (cada arquivo usa o que os anteriores definem; eventos.js inicia o app) -->
+<script src="js/nucleo/util.js"></script>
+<script src="js/nucleo/constantes.js"></script>
+<script src="js/dados/ucs.js"></script>
+<script src="js/regras/valor-referencial.js"></script>
+<script src="js/regras/indicadores.js"></script>
+<script src="js/nucleo/estado.js"></script>
+<script src="js/dados/firebase.js"></script>
+<script src="js/telas/login.js"></script>
+<script src="js/nucleo/perfis.js"></script>
+<script src="js/nucleo/navegacao.js"></script>
+<script src="js/telas/painel.js"></script>
+<script src="js/telas/minhas-ucs.js"></script>
+<script src="js/telas/registros.js"></script>
+<script src="js/telas/formulario.js"></script>
+<script src="js/telas/acessos.js"></script>
+<script src="js/telas/exportar.js"></script>
+<script src="js/telas/parametros.js"></script>
+<script src="js/telas/guia.js"></script>
+<script src="js/eventos.js"></script>
+</body>
+</html>

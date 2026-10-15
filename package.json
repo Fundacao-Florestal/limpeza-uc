@@ -1,0 +1,20 @@
+{
+  "name": "limpeza-uc",
+  "private": true,
+  "description": "Diagnóstico de limpeza das UCs da Fundação Florestal, com Firebase (Auth, Firestore e Hosting).",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "firebase emulators:exec --only firestore --project demo-limpeza-uc \"node --test test/regras.test.mjs\"",
+    "importar": "node scripts/importar.mjs",
+    "deploy": "firebase deploy --only hosting,firestore"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.0",
+    "firebase": "^11.0.0",
+    "firebase-tools": "^14.0.0"
+  }
+}

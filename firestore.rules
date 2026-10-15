@@ -1,0 +1,113 @@
+rules_version = '2';
+
+// Regras do Limpeza UC. Elas são a trava real dos perfis: a interface só mostra o que estas regras liberam.
+//
+// Perfis (campo Perfil em acessos/<uid>):
+//   admin      tudo; atribui perfis e mantém parâmetros
+//   gestor     cria e edita só as estruturas que ele mesmo criou, nas UCs atribuídas (campo UCs)
+//   gerente    lê as estruturas das suas Gerências (campo Gerencias) e aprova ou devolve as que estão "Em validação"
+//   validador  lê as estruturas aprovadas e faz a validação final (Validado -> Homologado) ou devolve
+//   final      lê apenas estruturas com validação final (Homologado)
+// Fluxo de Status: Rascunho -> Em validação -> Validado -> Homologado; Devolvido volta ao gestor.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Restrinja aqui o domínio institucional, se quiser travar no banco. Exemplo:
+    //   return request.auth.token.email.matches('.*@exemplo[.]sp[.]gov[.]br$');
+    function contaPermitida() {
+      return true;
+    }
+
+    // Login por e-mail e senha: só vale conta com e-mail confirmado. Sem isso, qualquer pessoa
+    // poderia criar uma conta com o e-mail de um colega e pedir perfil no nome dele.
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && contaPermitida();
+    }
+    function accPath() {
+      return /databases/$(database)/documents/acessos/$(request.auth.uid);
+    }
+    function hasAcc() {
+      return signedIn() && exists(accPath());
+    }
+    function acc() {
+      return get(accPath()).data;
+    }
+    function perfil() {
+      return hasAcc() ? acc().Perfil : null;
+    }
+    function isAdmin() {
+      return perfil() == 'admin';
+    }
+
+    match /config/{doc} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Nome e e-mail de quem já entrou, para exibir nomes e para o Administrador encontrar pessoas.
+    match /usuarios/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.Uid == uid
+        && request.resource.data.keys().hasOnly(['Uid', 'Nome', 'Email', 'UltimoAcesso']);
+      allow delete: if isAdmin();
+    }
+
+    match /acessos/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow write: if isAdmin();
+    }
+
+    // Pedido de perfil feito por quem ainda não tem acesso.
+    match /pedidos/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if signedIn() && request.auth.uid == uid && !hasAcc()
+        && request.resource.data.keys().hasOnly(['Uid', 'Perfil', 'Obs', 'Em'])
+        && request.resource.data.Uid == uid
+        && request.resource.data.Perfil in ['gestor', 'gerente', 'validador', 'final']
+        && request.resource.data.Obs is string && request.resource.data.Obs.size() <= 400;
+      allow delete: if isAdmin();
+    }
+
+    match /estruturas/{id} {
+      function cur() { return resource.data; }
+      function nxt() { return request.resource.data; }
+
+      // Gerente e Validador só mudam o andamento, nunca o conteúdo do diagnóstico.
+      function soAndamento() {
+        return nxt().diff(cur()).affectedKeys().hasOnly(['Status', 'MotivoDevolucao', 'AtualizadoEm', 'Hist']);
+      }
+      function gestorDono() {
+        return perfil() == 'gestor'
+          && nxt().CriadoPor == request.auth.uid
+          && nxt().UC in acc().UCs;
+      }
+      // Gestor salva rascunho ou envia para aprovação; editar algo aprovado reabre o fluxo.
+      function statusDoGestor() {
+        return nxt().Status in ['Rascunho', 'Em validação'] || nxt().get('Excluido', false) == true;
+      }
+
+      allow read: if isAdmin()
+        || (perfil() == 'gestor' && cur().CriadoPor == request.auth.uid)
+        || (perfil() == 'gerente' && cur().Gerencia in acc().Gerencias)
+        || (perfil() == 'validador' && cur().Status in ['Validado', 'Homologado', 'Devolvido'])
+        || (perfil() == 'final' && cur().Status == 'Homologado');
+
+      allow create: if isAdmin()
+        || (gestorDono() && nxt().ID is string && nxt().Status in ['Rascunho', 'Em validação']
+            && nxt().get('Excluido', false) == false);
+
+      allow update: if isAdmin()
+        || (gestorDono() && cur().CriadoPor == request.auth.uid && cur().UC in acc().UCs && statusDoGestor())
+        || (perfil() == 'gerente' && cur().Gerencia in acc().Gerencias
+            && cur().Status == 'Em validação' && nxt().Status in ['Validado', 'Devolvido'] && soAndamento())
+        || (perfil() == 'validador'
+            && cur().Status == 'Validado' && nxt().Status in ['Homologado', 'Devolvido'] && soAndamento());
+
+      allow delete: if isAdmin();
+    }
+  }
+}
