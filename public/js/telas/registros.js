@@ -13,6 +13,7 @@ function vReg(){
 }
 async function openRec(id){
   const x=S.recs.find(r=>r.ID===id);if(!x)return;
+  S.openId=id;
   await names([x.CriadoPor,...(x.Hist||[]).map(h=>h.por)]);
   const kv=(l,v)=>`<div><span>${l}</span><b>${v}</b></div>`;
   const canV=canApprove(x),canH=canHomolog(x),canE=canEditRec(x),vv=valorRec(x);
@@ -24,7 +25,8 @@ async function openRec(id){
   ${canV||canH?`<label class="f" style="margin-top:14px">Motivo (obrigatório para devolver)<textarea id="motivo" rows="2"></textarea></label>`:""}
   <div class="bar" style="margin:16px 0 0">${canE?`<button class="btn" data-act="edit" data-id="${esc(x.ID)}">Editar</button><button class="btn" data-act="dup" data-id="${esc(x.ID)}">Duplicar</button>`:""}${canV?`<button class="btn pri" data-act="validar" data-id="${esc(x.ID)}">Aprovar</button><button class="btn crit" data-act="devolver" data-id="${esc(x.ID)}">Devolver</button>`:""}${canH?`<button class="btn pri" data-act="homologar" data-id="${esc(x.ID)}">Validar (final)</button><button class="btn crit" data-act="devolver" data-id="${esc(x.ID)}">Devolver ao gestor</button>`:""}${canE&&x.Status==="Rascunho"?`<button class="btn crit" data-act="excluir" data-id="${esc(x.ID)}">Excluir rascunho</button>`:""}<span class="sp"></span><button class="btn" data-act="fechar">Fechar</button></div>
   ${!canV&&x.Status==="Em validação"?`<p class="note">Aprovar e devolver são ações do Gerente da respectiva Gerência.</p>`:""}${!canH&&x.Status==="Validado"?`<p class="note">A validação final é ação do Validador final.</p>`:""}`;
-  $("#dlg").showModal();
+  if(!$("#dlg").open)$("#dlg").showModal();
+  syncRota(false);
 }
 async function transition(id,para,motivo){
   const x=S.recs.find(r=>r.ID===id);if(!x)return;

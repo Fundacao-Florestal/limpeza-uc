@@ -21,6 +21,25 @@ Esta versão roda no **Firebase**: login com e-mail e senha pelo Firebase Authen
 
 Não há etapa de build: o que está em `public/` é exatamente o que vai para o ar. Para mudar algo, edite o arquivo e publique.
 
+**Tudo que vai para o ar está em `public/`**, e o resto do repositório é ferramenta, teste e documentação. O GitHub Pages publica a pasta `public/` (ver `.github/workflows/static.yml`) e o `npm run dev` também serve essa pasta. Não crie um `index.html` na raiz: ele não seria publicado.
+
+### Endereços das abas
+
+Cada aba tem um endereço, que pode ser compartilhado, favoritado ou recarregado:
+
+| Aba | Endereço |
+|---|---|
+| Minhas UCs | `#/minhas-ucs` |
+| Painel gerencial | `#/painel` |
+| Preenchimento | `#/preenchimento` |
+| Registros | `#/registros` |
+| Exportar | `#/exportar` |
+| Acessos | `#/acessos` |
+| Parâmetros | `#/parametros` |
+| Guia do painel | `#/guia` |
+
+Acrescentar o ID de uma estrutura abre o detalhe dela, por exemplo `#/registros/APA-BANHADO-01-X7K`. Os botões voltar e avançar do navegador trocam de aba. Quem abre o endereço de uma aba que o seu perfil não vê cai na primeira aba permitida, e quem não está logado passa pelo login e depois vai para o endereço pedido. O `#` é necessário porque o GitHub Pages não sabe redirecionar `/registros` para o `index.html`. Os endereços ficam em `js/nucleo/navegacao.js` (constante `ROTAS`).
+
 ```
 public/
 ├── index.html              estrutura da página e a lista de scripts, na ordem de carga
