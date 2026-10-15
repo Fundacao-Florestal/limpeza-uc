@@ -21,5 +21,7 @@ window.ALLOW_SIGNUP = true;
 // Este filtro é da interface; a trava no banco fica em contaPermitida(), no firestore.rules.
 window.ALLOWED_EMAIL_DOMAINS = [];
 
-// true só para testes locais com "npm run dev" (emuladores).
+// true para testar no seu computador com "npm run dev" (emuladores, em http://localhost:5050).
+// Só vale quando o site é aberto em localhost: publicado, o app sempre usa o projeto real.
+// No modo local, os e-mails de confirmação não são enviados: o link aparece no terminal do npm run dev.
 window.USE_EMULATORS = false;

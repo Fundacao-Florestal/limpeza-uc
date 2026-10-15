@@ -50,11 +50,13 @@ let FB_SUBS=[],FB_ROLE_SUBS=[],FB_ROLE_KEY=null;
 function fbStop(a){a.forEach(f=>{try{f()}catch{}});a.length=0}
 function fbConfigured(){const c=window.FIREBASE_CONFIG;return !!(window.firebase&&c&&c.apiKey&&!/COLE_AQUI/.test(c.apiKey))}
 async function boot(){
-  if(!fbConfigured()){S.db=null;setSync(false,"Modo local: Firebase não configurado; os dados valem só para esta sessão");onData();render();return}
+  /* Com USE_EMULATORS, usa um projeto de demonstração local, sem tocar no projeto real (npm run dev). */
+  const emu=!!window.USE_EMULATORS&&["localhost","127.0.0.1"].includes(location.hostname);
+  if(!emu&&!fbConfigured()){S.db=null;setSync(false,"Modo local: Firebase não configurado; os dados valem só para esta sessão");onData();render();return}
   try{
-    firebase.initializeApp(window.FIREBASE_CONFIG);
+    firebase.initializeApp(emu?{apiKey:"demo-key",authDomain:"localhost",projectId:"demo-limpeza-uc"}:window.FIREBASE_CONFIG);
     S.auth=firebase.auth();S.db=firebase.firestore();
-    if(window.USE_EMULATORS){S.auth.useEmulator("http://localhost:9099");S.db.useEmulator("localhost",8080)}
+    if(emu){S.auth.useEmulator("http://localhost:9099",{disableWarnings:true});S.db.useEmulator("localhost",8080)}
   }catch(e){S.db=null;S.auth=null;setSync(false,"Falha ao iniciar o Firebase");onData();render();return}
   try{S.auth.useDeviceLanguage()}catch{}
   render();
