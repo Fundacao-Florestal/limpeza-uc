@@ -78,6 +78,6 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("keydown",e=>{if(e.target.id==="ucQ"&&e.key==="Enter"){e.preventDefault();const m=ucMatches(S.ucQ);if(m.length===1)pickUc(m[0][1])}});
 $("#dlg").addEventListener("close",()=>{S.asg=null;if(S.view!=="form")render()});
-document.addEventListener("click",e=>{const m=e.target.closest("[data-fbmode]");if(m){fbMode(m.dataset.fbmode);return}const v=e.target.closest("[data-fbv]");if(v){fbVerify(v.dataset.fbv);return}const t=e.target.closest("[data-fb]");if(t&&t.dataset.fb==="logout"&&S.auth){S.loginOk="";S.auth.signOut()}});
+document.addEventListener("click",e=>{const m=e.target.closest("[data-fbmode]");if(m){fbMode(m.dataset.fbmode);return}const t=e.target.closest("[data-fb]");if(t&&t.dataset.fb==="logout"&&S.auth){S.loginOk="";S.auth.signOut()}});
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-fbform]");if(!f)return;e.preventDefault();fbEmail(f.dataset.fbform)});
 boot();

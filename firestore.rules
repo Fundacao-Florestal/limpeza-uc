@@ -19,12 +19,12 @@ service cloud.firestore {
       return true;
     }
 
-    // Login por e-mail e senha: só vale conta com e-mail confirmado. Sem isso, qualquer pessoa
-    // poderia criar uma conta com o e-mail de um colega e pedir perfil no nome dele.
+    // Login por e-mail e senha, sem exigir confirmação do e-mail. Quem decide o acesso é o
+    // Administrador, ao atribuir o perfil: sem perfil, a conta só consegue pedir acesso.
+    // Como o e-mail não é confirmado, o Administrador deve conferir com a pessoa antes de aprovar.
+    // Para voltar a exigir a confirmação, acrescente: && request.auth.token.email_verified == true
     function signedIn() {
-      return request.auth != null
-        && request.auth.token.email_verified == true
-        && contaPermitida();
+      return request.auth != null && contaPermitida();
     }
     function accPath() {
       return /databases/$(database)/documents/acessos/$(request.auth.uid);
