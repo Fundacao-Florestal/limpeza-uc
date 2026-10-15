@@ -8,14 +8,54 @@ Esta versão roda no **Firebase**: login com e-mail e senha pelo Firebase Authen
 
 | Caminho | O que é |
 |---|---|
-| `public/index.html` | O app (uma página só: telas, cálculo e lista de UCs) |
+| `public/` | O app: `index.html`, estilos em `css/` e código em `js/` (veja "Como o código está organizado") |
 | `public/firebase-config.js` | Configuração do projeto Firebase e do login (você preenche) |
 | `firestore.rules` | Regras de segurança: é aqui que cada perfil é travado |
 | `scripts/importar.mjs` | Importa a exportação CSV da versão anterior |
 | `test/regras.test.mjs` | Testes das regras no emulador do Firestore |
 | `test/interface/` | Teste da interface no navegador, com um Firebase falso em memória |
-| `legado/` | HTML original do artefato e o script que gerou a versão Firebase a partir dele |
+| `legado/` | Só histórico: HTML original do artefato e o script que fez a primeira conversão (não roda mais) |
 | `.github/workflows/publicar.yml` | Testa a cada push e publica no Firebase a cada push no `main` |
+
+## Como o código está organizado
+
+Não há etapa de build: o que está em `public/` é exatamente o que vai para o ar. Para mudar algo, edite o arquivo e publique.
+
+```
+public/
+├── index.html              estrutura da página e a lista de scripts, na ordem de carga
+├── firebase-config.js      configuração do projeto Firebase e do login
+├── css/estilos.css         todo o visual (cores em variáveis no :root, tema escuro automático)
+└── js/
+    ├── nucleo/
+    │   ├── util.js         utilitários: escape de HTML, formatação, avisos, download
+    │   ├── constantes.js   Gerências, situações, perfis, campos e rótulos, parâmetros padrão
+    │   ├── estado.js       estado do app (objeto S)
+    │   ├── perfis.js       o que cada perfil vê e pode fazer na interface
+    │   └── navegacao.js    troca de telas e desenho da página
+    ├── dados/
+    │   ├── ucs.js          lista de UCs com categoria e Gerência
+    │   └── firebase.js     login, leituras por perfil e gravação no Firestore
+    ├── regras/
+    │   ├── valor-referencial.js   tabela CadTerc e cálculo do valor mensal
+    │   └── indicadores.js         validação do formulário e IUP, IPS, modalidade etc.
+    ├── telas/              uma por aba: login, painel, minhas-ucs, registros, formulario,
+    │                       acessos, exportar, parametros, guia
+    └── eventos.js          cliques e digitação ligados às telas; inicia o app
+```
+
+Onde mexer para as mudanças mais comuns:
+
+| Quero mudar… | Arquivo |
+|---|---|
+| Incluir ou corrigir uma UC | `js/dados/ucs.js` |
+| Valores do CadTerc ou regra do valor mensal | `js/regras/valor-referencial.js` (os valores também são editáveis na aba Parâmetros) |
+| Fórmulas do IUP, IPS, modalidade | `js/regras/indicadores.js` |
+| Um texto ou campo de uma tela | o arquivo da tela em `js/telas/` |
+| Cores, fontes, espaçamentos | `css/estilos.css` |
+| Quem vê o quê | `js/nucleo/perfis.js` (tela) e `firestore.rules` (banco, é o que vale de verdade) |
+
+Os scripts são comuns, não módulos: carregados em ordem pelo `index.html`, eles compartilham as funções e constantes entre si. Ao criar um arquivo novo, inclua a tag `<script>` no `index.html` antes de `js/eventos.js`, depois dos arquivos de que ele depende.
 
 ## Perfis
 

@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 ROOT = pathlib.Path(sys.argv[1])
 BUILD = pathlib.Path(__file__).parent
 SHOTS = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else pathlib.Path(tempfile.gettempdir())
-HTML = (ROOT / "public/index.html").read_text(encoding="utf8")
+
 MOCK = (BUILD / "mockfb.js").read_text(encoding="utf8")
 CONFIG = 'window.FIREBASE_CONFIG={apiKey:"teste",projectId:"demo"};window.ALLOW_SIGNUP=true;'
 SENHA = "senha-forte-1"
@@ -26,18 +26,27 @@ def check(name, cond):
         fails.append(name)
 
 
+TIPOS = {".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8", ".css": "text/css; charset=utf-8"}
+
+
 def route(r):
     u = r.request.url
-    if u.endswith("/index.html") or u.rstrip("/") == "http://app.test":
-        r.fulfill(body=HTML, content_type="text/html; charset=utf-8")
-    elif "firebase-app-compat" in u:
+    if "firebase-app-compat" in u:
         r.fulfill(body=MOCK, content_type="application/javascript")
     elif "gstatic.com/firebasejs" in u:
         r.fulfill(body="", content_type="application/javascript")
-    elif u.endswith("firebase-config.js"):
-        r.fulfill(body=CONFIG, content_type="application/javascript")
     elif "fonts." in u:
         r.fulfill(body="", content_type="text/css")
+    elif u.startswith("http://app.test/"):
+        caminho = u.split("?")[0][len("http://app.test/"):] or "index.html"
+        if caminho == "firebase-config.js":
+            r.fulfill(body=CONFIG, content_type="application/javascript")
+            return
+        arq = (ROOT / "public" / caminho).resolve()
+        if (ROOT / "public").resolve() in arq.parents and arq.is_file():
+            r.fulfill(body=arq.read_bytes(), content_type=TIPOS.get(arq.suffix, "application/octet-stream"))
+        else:
+            r.fulfill(status=404, body="não encontrado")
     else:
         r.continue_()
 
