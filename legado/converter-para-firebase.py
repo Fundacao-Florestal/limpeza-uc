@@ -1,8 +1,13 @@
-"""Gera public/index.html (versão Firebase) a partir do HTML original do artefato Limpeza UC.
+"""HISTÓRICO, não use mais.
 
-Uso: python3 patch.py <original.html> <saida.html>
-Cada troca exige exatamente uma ocorrência do trecho original, para que nada mude por engano.
+Este script gerou a primeira versão Firebase (um único public/index.html) a partir do HTML original do artefato.
+Depois disso o app foi dividido em arquivos (public/css, public/js) e passou a ser editado diretamente.
+Rodar este script de novo apagaria a organização atual, por isso ele recusa rodar.
 """
+import sys
+
+sys.exit("Script histórico: o app agora é editado diretamente em public/. Veja o README.")
+
 import re
 import sys
 
