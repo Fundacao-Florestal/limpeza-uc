@@ -77,7 +77,9 @@ document.addEventListener("change",e=>{
   else if(el.dataset&&el.dataset.sel&&S.form){const k=el.dataset.k;S.form[k]=NUMK(k)?(el.value===""?null:Number(el.value)):el.value;if(k==="Categoria"){const ci=CATS.indexOf(el.value);S.form.UCTipo=ci>=0?CAT_TIPO[ci]:""}refreshCheck()}
 });
 document.addEventListener("keydown",e=>{if(e.target.id==="ucQ"&&e.key==="Enter"){e.preventDefault();const m=ucMatches(S.ucQ);if(m.length===1)pickUc(m[0][1])}});
-$("#dlg").addEventListener("close",()=>{S.asg=null;if(S.view!=="form")render()});
+$("#dlg").addEventListener("close",()=>{S.asg=null;S.openId=null;if(S.view!=="form")render();else syncRota(false)});
+window.addEventListener("hashchange",aplicarRota);
+window.addEventListener("popstate",aplicarRota);
 document.addEventListener("click",e=>{const m=e.target.closest("[data-fbmode]");if(m){fbMode(m.dataset.fbmode);return}const t=e.target.closest("[data-fb]");if(t&&t.dataset.fb==="logout"&&S.auth){S.loginOk="";S.auth.signOut()}});
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-fbform]");if(!f)return;e.preventDefault();fbEmail(f.dataset.fbform)});
 boot();
