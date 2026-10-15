@@ -1,1 +1,137 @@
-# limpeza-uc
+# Limpeza UC
+
+Diagnóstico da necessidade de limpeza predial das unidades de conservação da Fundação Florestal. Cada Gestor cadastra as estruturas da sua UC, o Gerente aprova, o Validador final valida, e o painel consolida o valor referencial mensal calculado pela tabela CadTerc.
+
+Esta versão roda no **Firebase**: login pelo Firebase Authentication (conta Microsoft institucional ou Google), dados no Firestore e site no Firebase Hosting. Ela substitui o artefato original do claude.ai, guardado em `legado/`.
+
+## O que tem aqui
+
+| Caminho | O que é |
+|---|---|
+| `public/index.html` | O app (uma página só: telas, cálculo e lista de UCs) |
+| `public/firebase-config.js` | Configuração do projeto Firebase e do login (você preenche) |
+| `firestore.rules` | Regras de segurança: é aqui que cada perfil é travado |
+| `scripts/importar.mjs` | Importa a exportação CSV da versão anterior |
+| `test/regras.test.mjs` | Testes das regras no emulador do Firestore |
+| `test/interface/` | Teste da interface no navegador, com um Firebase falso em memória |
+| `legado/` | HTML original do artefato e o script que gerou a versão Firebase a partir dele |
+| `.github/workflows/publicar.yml` | Testa a cada push e publica no Firebase a cada push no `main` |
+
+## Perfis
+
+O perfil de cada pessoa fica em `acessos/<uid>`. As regras do Firestore aplicam o escopo no banco, não só na tela.
+
+| Perfil | Lê | Grava |
+|---|---|---|
+| Administrador (`admin`) | Tudo | Tudo; atribui perfis, parâmetros e tabela de valores |
+| Gestor (`gestor`) | As estruturas que ele criou | Cria e edita as próprias estruturas, só nas UCs atribuídas; envia para aprovação |
+| Gerente (`gerente`) | As estruturas das suas Gerências | Aprova ou devolve o que está "Em validação" na sua Gerência; não altera o conteúdo |
+| Validador final (`validador`) | Estruturas aprovadas, homologadas ou devolvidas | Faz a validação final ou devolve; não altera o conteúdo |
+| Usuário final (`final`) | Só estruturas com validação final | Nada |
+
+Quem entra sem perfil vê apenas a tela de pedido de acesso.
+
+Coleções do Firestore: `estruturas/<ID>` (um documento por estrutura), `acessos/<uid>`, `pedidos/<uid>`, `usuarios/<uid>` (nome e e-mail de quem já entrou) e `config/valores`, `config/parametros`.
+
+## Passo a passo para colocar no ar
+
+### 1. Criar o projeto
+
+No [console do Firebase](https://console.firebase.google.com), crie um projeto (o Google Analytics pode ficar desligado).
+
+### 2. Criar o banco
+
+Em **Firestore Database > Criar banco de dados**, escolha o modo de produção e a região **southamerica-east1 (São Paulo)**. A região não pode ser mudada depois.
+
+### 3. Ativar o login
+
+Em **Authentication > Método de login**:
+
+- **Microsoft** (recomendado para contas institucionais): é preciso registrar um aplicativo no Microsoft Entra ID (portal do Azure > Registros de aplicativo). Use como URI de redirecionamento o endereço que o próprio Firebase mostra nessa tela (termina em `/__/auth/handler`), gere um segredo do cliente e cole a ID do aplicativo e o segredo no Firebase. Quem administra o Microsoft 365 da FF faz esse registro.
+- **Google**: basta ativar.
+
+Em **Authentication > Configurações > Domínios autorizados**, confira se aparece o domínio onde o app vai rodar (o `*.web.app` do projeto já vem incluído).
+
+### 4. Ligar o app ao projeto
+
+Em **Configurações do projeto > Geral > Seus apps**, adicione um app Web e copie a configuração para `public/firebase-config.js`. No mesmo arquivo:
+
+- `AUTH_PROVIDERS`: quais botões de login aparecem (`"microsoft"`, `"google"`).
+- `MICROSOFT_TENANT`: o ID do locatário Microsoft 365 da FF, para só aceitar contas de lá.
+- `ALLOWED_EMAIL_DOMAINS`: domínios de e-mail aceitos. Para travar também no banco, edite `contaPermitida()` em `firestore.rules`.
+
+Esses valores não são segredo e podem ser commitados.
+
+### 5. Publicar
+
+Com Node 20 ou superior:
+
+```bash
+npm install
+npx firebase login
+npx firebase use --add      # escolha o projeto criado no passo 1
+npm run deploy              # publica o site e as regras
+```
+
+O endereço do site aparece no final (`https://<projeto>.web.app`).
+
+### 6. Criar o primeiro Administrador
+
+1. Abra o site e entre com a sua conta. Vai aparecer a tela de pedido de acesso.
+2. No console, em **Authentication > Users**, copie o UID da sua conta.
+3. Em **Firestore Database**, crie a coleção `acessos` com um documento cujo ID é esse UID e os campos `Uid` (string, o mesmo UID) e `Perfil` (string, `admin`).
+4. Recarregue o site. Daqui em diante os perfis são atribuídos pela aba **Acessos**.
+
+### 7. Importar os dados da versão anterior
+
+No artefato original, o Administrador abre **Registros**, limpa os filtros, desmarca "Ocultar exemplos" e clica em **Exportar CSV (modelo)**. Com esse arquivo:
+
+1. Gere uma chave em **Configurações do projeto > Contas de serviço > Gerar nova chave privada**. Guarde fora do repositório e apague depois.
+2. Confira antes, sem gravar nada:
+   ```bash
+   node scripts/importar.mjs --csv exportacao.csv --seco
+   ```
+3. Importe:
+   ```bash
+   node scripts/importar.mjs --csv exportacao.csv --chave chave-servico.json --donos donos.csv
+   ```
+
+O CSV exportado não diz quem criou cada registro. O arquivo opcional `donos.csv` (linhas `UC;uid`) define o Gestor de cada UC; sem ele, os registros importados ficam visíveis para Administrador, Gerentes e Validador, mas não aparecem na lista de nenhum Gestor. O histórico de aprovações e o detalhamento do valor por tipo de serviço também não vêm no CSV: os registros entram com a situação e o valor total que tinham.
+
+### 8. Publicação automática (opcional)
+
+O workflow em `.github/workflows/publicar.yml` testa as regras em todo push e publica a cada push no `main`. Para ligar:
+
+1. No Google Cloud do projeto, crie uma conta de serviço com os papéis **Administrador do Firebase Hosting** e **Administrador das Regras do Firebase**, e gere uma chave JSON.
+2. No GitHub, em **Settings > Secrets and variables > Actions**, crie o secret `FIREBASE_SERVICE_ACCOUNT` com o conteúdo do JSON e a variable `FIREBASE_PROJECT_ID` com o ID do projeto.
+
+## Testes
+
+```bash
+npm test
+```
+
+Sobe o emulador do Firestore e verifica, perfil por perfil, o que as regras liberam e bloqueiam. Precisa de Java 21.
+
+O teste da interface roda o app num navegador com um Firebase falso em memória (login, perfis, gravação, aprovação, download):
+
+```bash
+pip install playwright && playwright install chromium
+python3 test/interface/teste_interface.py .
+```
+
+Para usar o app localmente com os emuladores, ponha `USE_EMULATORS = true` em `firebase-config.js` e rode `npm run dev`.
+
+## O que mudou em relação ao artefato
+
+- **Login**: antes era a conta do claude.ai; agora é o Firebase Authentication.
+- **Dados**: antes cada pessoa gravava todas as suas estruturas num único documento (`envios/<pessoa>`); agora cada estrutura é um documento em `estruturas/`, o que permite aplicar o escopo de cada perfil no banco.
+- **Perfis**: antes o controle era só da interface, e Gerentes e Validadores precisavam de permissão de edição no artefato para ler os envios. Agora as regras do Firestore liberam exatamente o escopo de cada perfil.
+- **Busca de pessoas**: o Administrador encontra quem já entrou no sistema ao menos uma vez.
+- **Downloads**: Excel e CSV baixam direto pelo navegador.
+- **Cálculo, telas e textos**: iguais ao original.
+
+## Limites conhecidos
+
+- A Gerência de cada estrutura é preenchida pelo app a partir da UC; as regras confiam nesse campo e não conferem a correspondência UC → Gerência.
+- Cada estrutura cadastrada tem um único Gestor dono. Se a UC trocar de Gestor, o Administrador precisa editar o campo `CriadoPor` das estruturas no console.

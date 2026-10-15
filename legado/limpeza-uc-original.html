@@ -1,0 +1,1090 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Limpeza UC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2EE;--surface:#FFFFFF;--ink:#17211C;--ink2:#4A5A52;--line:#D5DDD6;--line2:#E6ECE7;
+  --pri:#244B3B;--pri-ink:#FFFFFF;--pri-soft:#DDE9E2;--acc:#2B6C8C;
+  --ok:#2E7D4F;--ok-soft:#DCEFE2;--warn:#8F5A0B;--warn-soft:#F6E7C9;--crit:#B23A2E;--crit-soft:#F6DCD8;--info:#2B6C8C;--info-soft:#D9E8F0;--neu-soft:#E4EAE5;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1813;--surface:#17231C;--ink:#E6EEE8;--ink2:#9DB0A5;--line:#2A3A31;--line2:#213028;
+  --pri:#6FBF98;--pri-ink:#0C1A13;--pri-soft:#1E3628;--acc:#6FB3D4;
+  --ok:#58C38B;--ok-soft:#1B3527;--warn:#E0A84A;--warn-soft:#3A2D14;--crit:#EF7B6C;--crit-soft:#3E1E1A;--info:#6FB3D4;--info-soft:#16303D;--neu-soft:#22322A;}}
+:root[data-theme="dark"]{
+  --bg:#0F1813;--surface:#17231C;--ink:#E6EEE8;--ink2:#9DB0A5;--line:#2A3A31;--line2:#213028;
+  --pri:#6FBF98;--pri-ink:#0C1A13;--pri-soft:#1E3628;--acc:#6FB3D4;
+  --ok:#58C38B;--ok-soft:#1B3527;--warn:#E0A84A;--warn-soft:#3A2D14;--crit:#EF7B6C;--crit-soft:#3E1E1A;--info:#6FB3D4;--info-soft:#16303D;--neu-soft:#22322A;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1240px;margin-inline:auto}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;font-weight:600;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:20px 0}
+.brand h1{font-size:26px}
+.brand p{margin:2px 0 0;color:var(--ink2);font-size:13px}
+.sync{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.dot.off{background:var(--warn)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;margin-top:16px;border-bottom:1px solid var(--line)}
+nav.tabs button{background:none;border:0;padding:10px 14px;cursor:pointer;color:var(--ink2);font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--pri);border-bottom-color:var(--pri);font-weight:600}
+nav.tabs button:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+main{padding-top:20px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.bar .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--ink2)}
+.btn.pri{background:var(--pri);color:var(--pri-ink);border-color:var(--pri)}
+.btn.crit{color:var(--crit)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:4px 10px;font-size:12.5px}
+input[type=text],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-height:38px}
+input:disabled,select:disabled{background:var(--neu-soft);color:var(--ink2)}
+input.mono,.mono{font-family:var(--f-mono)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:500;color:var(--ink2)}
+label.f small{display:inline;font-weight:400;color:var(--ink2);opacity:.85}
+label.f.bad input,label.f.bad select{border-color:var(--crit)}
+.filters select,.filters input{width:auto;min-width:150px}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.kpi{padding:14px 16px;border-right:1px solid var(--line2)}
+.kpi:last-child{border-right:0}
+.kpi .l{font-size:12px;color:var(--ink2)}
+.kpi .v{font-family:var(--f-mono);font-size:26px;font-weight:500;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--ink2)}
+.grid{display:grid;gap:16px;margin-top:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.panel h2{font-size:16px;margin-bottom:2px}
+.panel .sub{color:var(--ink2);font-size:12.5px;margin:0 0 12px}
+.hb{display:grid;grid-template-columns:minmax(70px,120px) 1fr auto;gap:6px 10px;align-items:center;font-size:13px}
+.hb .lab{overflow-wrap:anywhere}
+.hb .track{background:var(--neu-soft);height:14px;border-radius:2px;overflow:hidden}
+.hb .fill{height:100%;background:var(--pri);display:block}
+.hb .fill.alt{background:var(--acc)}
+.hb .val{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;font-size:12.5px}
+.stack{display:flex;height:26px;border-radius:3px;overflow:hidden;background:var(--neu-soft)}
+.stack span{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-family:var(--f-mono);min-width:0;overflow:hidden}
+.s-Rascunho{background:var(--neu-soft);color:var(--ink)}
+.s-Em-validação{background:var(--info-soft);color:var(--info)}
+.s-Validado{background:var(--ok-soft);color:var(--ok)}
+.s-Homologado{background:var(--ok);color:var(--surface)}
+.s-Devolvido{background:var(--warn-soft);color:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12.5px}
+.legend b{font-family:var(--f-mono);font-weight:500}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-weight:500;white-space:nowrap;background:var(--neu-soft);color:var(--ink)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.crit{background:var(--crit-soft);color:var(--crit)}.pill.info{background:var(--info-soft);color:var(--info)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);text-align:left;font-weight:500;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:top}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--pri-soft)}
+tr.zero td{color:var(--ink2)}
+.note{font-size:12.5px;color:var(--ink2);margin-top:12px}
+.empty{padding:28px 8px;text-align:center;color:var(--ink2)}
+/* form */
+.formgrid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:900px){.formgrid{grid-template-columns:1fr}}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px}
+.sec h2{font-size:16px;margin-bottom:2px}.sec .sub{margin:0 0 12px;color:var(--ink2);font-size:12.5px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.fields .wide{grid-column:1/-1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;width:max-content}
+.seg button{background:var(--surface);border:0;padding:8px 16px;cursor:pointer;min-height:38px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink);font-weight:600}
+.side{position:sticky;top:12px}
+@media (max-width:900px){.side{position:static}}
+.side .panel{margin-bottom:12px}
+.chk{list-style:none;margin:6px 0 0;padding:0;font-size:12.5px;display:grid;gap:4px}
+.chk li{padding-left:16px;position:relative}
+.chk li::before{content:"";position:absolute;left:0;top:7px;width:7px;height:7px;border-radius:50%;background:var(--crit)}
+.chk li.w::before{background:var(--warn)}
+.ind{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:8px 0 0}
+.ind dt{color:var(--ink2)}.ind dd{margin:0;text-align:right;font-family:var(--f-mono)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-size:13px;z-index:20;max-width:90vw}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:0;width:min(720px,94vw);max-height:90vh}
+dialog::backdrop{background:rgba(10,20,15,.55)}
+.dlg{padding:20px;overflow:auto;max-height:90vh}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px 16px;margin:12px 0}
+.kv div span{display:block;font-size:11.5px;color:var(--ink2)}
+.kv div b{font-family:var(--f-mono);font-weight:500}
+details.det{margin-top:14px;border:1px dashed var(--line);border-radius:8px;padding:10px 12px}
+details.det>summary{cursor:pointer;font-weight:600;font-size:13.5px}
+details.det[open]>summary{margin-bottom:8px}
+.vt td input{width:92px;text-align:right}.vt tfoot td{font-weight:600;border-top:2px solid var(--line)}
+.hist{list-style:none;margin:8px 0 0;padding:0;font-size:12.5px;display:grid;gap:6px}
+.banner{background:var(--warn-soft);color:var(--warn);padding:8px 12px;border-radius:6px;margin-bottom:12px;font-size:13px}
+.ucbox{display:grid;gap:10px}
+.ucl{display:grid;gap:2px;max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px;background:var(--surface)}
+.ucl button{display:flex;justify-content:space-between;gap:12px;text-align:left;background:none;border:0;padding:9px 10px;border-radius:4px;cursor:pointer}
+.ucl button:hover,.ucl button:focus-visible{background:var(--pri-soft)}
+.ucl small{color:var(--ink2);white-space:nowrap}
+.ucl .hint{padding:10px;color:var(--ink2);font-size:12.5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:18px;cursor:pointer}
+.chips button:hover{border-color:var(--ink2)}
+.chips button[aria-pressed="true"]{background:var(--pri);color:var(--pri-ink);border-color:var(--pri);font-weight:600}
+.ucard{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;border:1px solid var(--pri);border-radius:8px;background:var(--pri-soft)}
+.ucard b{font-family:var(--f-display);font-size:17px;font-weight:600}
+.ucard .sp{flex:1}
+.tr{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+select.vas{width:auto;min-height:30px;padding:3px 8px;font-size:12px}
+.chips.sm button{padding:5px 12px;font-size:12.5px}
+.ucl .gh{padding:6px 10px;font-size:11.5px;color:var(--ink2);font-weight:600}
+.ucl label{display:flex;gap:10px;align-items:center;padding:6px 10px;border-radius:4px;cursor:pointer}
+.ucl label:hover{background:var(--pri-soft)}
+.ucl input[type=checkbox],.checks input{width:auto;min-height:0}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 12px}
+.checks label{display:flex;gap:8px;align-items:center;padding:4px 0;cursor:pointer}
+.lst{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.lst li{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.lst .sp{flex:1}
+.guide td:first-child{font-weight:600;white-space:nowrap}
+.guide td{min-width:140px}
+@media (prefers-reduced-motion:no-preference){.hb .fill{transition:width .3s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Limpeza das UCs</h1>
+      <p>Diagnóstico por estrutura, aprovação pelo Gerente e painel gerencial · Fundação Florestal</p>
+    </div>
+    <div class="tr"><div class="sync" id="sync"><span class="dot off"></span><span>Conectando…</span></div><div class="sync" id="whoami"></div></div>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="main"></main>
+</div>
+<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+"use strict";
+/* ============ Constantes e regras (paridade com o modelo Excel / Power Fx v2) ============ */
+const GER=["GIN","GIO","GIS","GLC","GLN","GLS","GM","GVPM","GVRAP"];
+const TIPOS=["Sede administrativa","Centro de visitantes","Base de fiscalização","Hospedaria / alojamento","Casa de funcionário","Sanitários públicos","Galpão / oficina","Outro uso"];
+const STATUS=["Rascunho","Em validação","Validado","Homologado","Devolvido"];
+const SL={"Em validação":"Em aprovação","Validado":"Aprovado pela Gerência","Homologado":"Validado final"};const sl=s=>SL[s]||s;
+const PERFIS={admin:"Administrador",gestor:"Gestor",gerente:"Gerente",validador:"Validador final",final:"Usuário final"};
+const CATS=["Área de Proteção Ambiental", "Área de Relevante Interesse Ambiental", "Estação Ecológica", "Estação Experimental", "Floresta", "Floresta Estadual", "Horto Florestal", "Monumento Natural", "Parque Estadual", "Refúgio de Vida Silvestre", "Reserva Biológica", "Reserva de Desenvolvimento Sustentável", "Reserva Extrativista", "Viveiro Florestal"];
+const CAT_TIPO=["Unidade de Conservação de Uso Sustentável","Unidade de Conservação de Uso Sustentável","Unidade de Conservação de Proteção Integral","Área de Produção/Pesquisa","Área de Produção/Pesquisa","Unidade de Conservação de Uso Sustentável","Área de Produção/Pesquisa","Unidade de Conservação de Proteção Integral","Unidade de Conservação de Proteção Integral","Unidade de Conservação de Proteção Integral","Unidade de Conservação de Proteção Integral","Unidade de Conservação de Uso Sustentável","Unidade de Conservação de Uso Sustentável","Área de Produção/Pesquisa"];
+const UCS=[["APA BANHADO",0,"GVPM"],["APA BARREIRO RICO",0,"GIS"],["APA CABREÚVA",0,"GM"],["APA CAJAMAR",0,"GM"],["APA CAJATI",0,"GVRAP"],["APA CAMPOS DO JORDÃO",0,"GVPM"],["APA CUESTA CORUMBATAÍ",0,"GIN"],["APA CUESTA GUARANI",0,"GIS"],["APA CUESTA PARANAPANEMA",0,"GIS"],["APA HARAS DE SÃO BERNARDO",0,"GLC"],["APA IBITINGA",0,"GIN"],["APA ILHA COMPRIDA",0,"GLS"],["APA ITUPARARANGA",0,"GM"],["APA JUNDIAÍ",0,"GM"],["APA MARINHA DO LITORAL CENTRO",0,"GLC"],["APA MARINHA DO LITORAL NORTE",0,"GLN"],["APA MARINHA DO LITORAL SUL",0,"GLS"],["APA MATA DO IGUATEMI",0,"GM"],["APA MORRO DE SÃO BENTO",0,"GIN"],["APA PARQUE E FAZENDA DO CARMO",0,"GM"],["APA PIRACICABA E JUQUERI MIRIM - ÁREA I",0,"GIN"],["APA PIRACICABA E JUQUERI MIRIM - ÁREA II",0,"GVPM"],["APA PLANALTO DO TURVO",0,"GVRAP"],["APA QUILOMBOS DO MÉDIO RIBEIRA",0,"GVRAP"],["APA REPRESA BAIRRO DA USINA",0,"GVPM"],["APA RIO BATALHA",0,"GIO"],["APA RIO PARDINHO E RIO VERMELHO",0,"GVRAP"],["APA SAPUCAÍ-MIRIM",0,"GVPM"],["APA SERRA DO ITAPETI",0,"GM"],["APA SERRA DO MAR",0,"GVRAP"],["APA SILVEIRAS",0,"GVPM"],["APA SISTEMA CANTAREIRA",0,"GVPM"],["APA SÃO FRANCISCO XAVIER",0,"GVPM"],["APA TANQUÃ - RIO PIRACICABA",0,"GIS"],["APA TIETÊ - JUMIRIM",0,"GM"],["APA VÁRZEA DO RIO TIETÊ",0,"GM"],["ARIE GUARÁ",1,"GLS"],["ARIE LEOPOLDO MAGNO COUTINHO",1,"GIO"],["ARIE PEDRA BRANCA",1,"GVPM"],["ARIE SÃO SEBASTIÃO",1,"GLN"],["ARIE ZVS ILHA COMPRIDA",1,"GLS"],["EE ANGATUBA",2,"GIS"],["EE ASSIS",2,"GIO"],["EE AVARÉ",2,"GIS"],["EE BANANAL",2,"GVPM"],["EE BARREIRO RICO",2,"GIS"],["EE CAETETUS",2,"GIO"],["EE CHAUÁS",2,"GLS"],["EE IBICATU",2,"GM"],["EE ITABERÁ",2,"GVRAP"],["EE ITAPETI",2,"GM"],["EE ITAPEVA",2,"GVRAP"],["EE ITIRAPINA",2,"GIN"],["EE JATAÍ",2,"GIN"],["EE JURÉIA ITATINS",2,"GLS"],["EE MARÍLIA",2,"GIO"],["EE Mata do Jacaré São Carlos",2,"GIN"],["EE MOGI-GUAÇU",2,"GIN"],["EE NOROESTE PAULISTA",2,"GIO"],["EE PARANAPANEMA",2,"GIS"],["EE PAULO DE FARIA",2,"GIO"],["EE RIBEIRÃO PRETO",2,"GIN"],["EE SANTA BARBARA",2,"GIS"],["EE SANTA MARIA",2,"GIN"],["EE SEBASTIÃO ALEIXO DA SILVA ( EEc Bauru)",2,"GIO"],["EE VALINHOS",2,"GM"],["EE XITUÊ",2,"GVRAP"],["EEx ARARAQUARA",3,"GIN"],["EEx BAURU",3,"GIO"],["EEx BENTO QUIRINO",3,"GIN"],["EEx BURI",3,"GIS"],["EEx CASA BRANCA",3,"GIN"],["EEx ITAPETININGA",3,"GIS"],["EEx ITAPEVA",3,"GVRAP"],["EEx ITARARÉ",3,"GVRAP"],["EEx ITIRAPINA",3,"GIN"],["EEx JAU",3,"GIO"],["EEx LUIZ ANTONIO",3,"GIN"],["EEx MOGI MIRIM",3,"GIN"],["EEx MOGI-GUAÇU",3,"GIN"],["EEx PARAGUAÇU PAULISTA",3,"GIO"],["EEx SANTA RITA DO PASSA QUATRO",3,"GIN"],["EEx SÃO JOSE DO RIO PRETO",3,"GIO"],["EEx SÃO SIMÃO",3,"GIN"],["EEx TUPI",3,"GM"],["F AGUAS DE SANTA BARBARA",4,"GIS"],["F ANGATUBA",4,"GIS"],["F AVARE I",4,"GIS"],["F AVARE II",4,"GIS"],["F BATATAIS",4,"GIN"],["F BEBEDOURO",4,"GIN"],["F BOTUCATU",4,"GIS"],["F CAJURU",4,"GIN"],["F MANDURI",4,"GIS"],["F PARANAPANEMA",4,"GIS"],["F PIRAJU",4,"GIS"],["FE ASSIS",5,"GIO"],["FE EDMUNDO NAVARRO DE ANDRADE",5,"GIN"],["FE GUARULHOS",5,"GVPM"],["FE NOROESTE PAULISTA",5,"GIO"],["FE PEDERNEIRAS",5,"GIO"],["FE SERRA D'AGUA",5,"GM"],["HF SUSSUÍ",6,"GIO"],["MONA MANTIQUEIRA PAULISTA",7,"GVPM"],["MONA PEDRA DO BAÚ",7,"GVPM"],["MONA PEDRA GRANDE",7,"GVPM"],["PE AGUAPEÍ",8,"GIO"],["PE ALBERTO LÖFGREN",8,"GM"],["PE ASSESSORIA DA REFORMA AGRÁRIA (ARA)",8,"GM"],["PE CAMPINA DO ENCANTADO",8,"GLS"],["PE CAMPOS DO JORDÂO",8,"GVPM"],["PE CANTAREIRA",8,"GM"],["PE CARLOS BOTELHO",8,"GVRAP"],["PE CAVERNA DO DIABO",8,"GVRAP"],["PE FONTES DO IPIRANGA",8,"GM"],["PE FURNAS DO BOM JESUS",8,"GIN"],["PE ILHA ANCHIETA",8,"GLN"],["PE ILHA DO CARDOSO",8,"GLS"],["PE ILHABELA",8,"GLN"],["PE INTERVALES",8,"GVRAP"],["PE ITABERABA",8,"GVPM"],["PE ITAPETINGA",8,"GVPM"],["PE ITINGUÇU",8,"GLS"],["PE JARAGUÁ",8,"GM"],["PE JUQUERY",8,"GM"],["PE JURUPARÁ",8,"GVRAP"],["PE LAGAMAR DE CANANÉIA",8,"GLS"],["PE MANANC. CAMPOS DO JORDÃO",8,"GVPM"],["PE MARINHO DA LAJE DE SANTOS",8,"GLC"],["PE MORRO DO DIABO",8,"GIO"],["PE Morro Grande",8,"GM"],["PE NASCENTES PARANAPANEMA",8,"GVRAP"],["PE PORTO FERREIRA",8,"GIN"],["PE PRELADO",8,"GLS"],["PE RESTINGA DE BERTIOGA",8,"GLC"],["PE RIO DO PEIXE",8,"GIO"],["PE RIO TURVO",8,"GVRAP"],["PE TURÍSTICO DO ALTO DO RIBEIRA (PETAR)",8,"GVRAP"],["PE VASSUNUNGA",8,"GIN"],["PE XIXOVÁ-JAPUÍ",8,"GLC"],["PE ÁGUAS DA BILLINGS",8,"GLC"],["PE ÁGUAS DA PRATA",8,"GIN"],["PESM - NÚCLEO BERTIOGA",8,"GLC"],["PESM - NÚCLEO CAMINHOS DO MAR",8,"GLC"],["PESM - NÚCLEO CARAGUATATUBA",8,"GLN"],["PESM - NÚCLEO CUNHA",8,"GVPM"],["PESM - NÚCLEO CURUCUTU",8,"GLC"],["PESM - NÚCLEO ITARIRÚ",8,"GLC"],["PESM - NÚCLEO ITUTINGA PILÕES",8,"GLC"],["PESM - NÚCLEO PADRE DÓRIA",8,"GLN"],["PESM - NÚCLEO PICINGUABA",8,"GLN"],["PESM - NÚCLEO SANTA VIRGÍNIA",8,"GVPM"],["PESM - NÚCLEO SÃO SEBASTIÃO",8,"GLN"],["PIER DO SACO DO RIBEIRA",8,"GLN"],["RDS BARRA DO UNA",11,"GLS"],["RDS BARREIRO ANHEMAS",11,"GVRAP"],["RDS DESPRAIADO",11,"GLS"],["RDS ITAPANHAPIMA",11,"GLS"],["RDS LAVRAS",11,"GVRAP"],["RDS PINHEIRINHOS",11,"GVRAP"],["RDS QUILOMBOS DA BARRA DO TURVO",11,"GVRAP"],["REBIO ALTO DA SERRA DE PARANAPIACABA",10,"GLC"],["REBIO MOGI-GUAÇU",10,"GIN"],["RESEX DA ILHA DO TUMBA",12,"GLS"],["RESEX TAQUARI",12,"GLS"],["RVS AIMORÉS",9,"GIO"],["RVS ILHAS DO ABRIGO E GUARARITAMA",9,"GLS"],["VF PINDAMONHANGABA",13,"GVPM"],["VF TAUBATÉ",13,"GVPM"]]; /* [nome, categoria (índice em CATS), Gerência] — banco "Áreas protegidas" do Notion */
+const SYNC="21/09/2026";
+const norm=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const DEF={V1:30,V2:100,V3:300,P1:100,P2:300,P3:800,PequenaArea:750,ProdInterna:750,ProdExterna:7500,PesoIUP:0.05,PesoIPS:0.03,PesoIHOS:0.02,VersaoRegra:"teste-reconstruido-2026-09-21"};
+const PLBL={V1:"Visitantes/dia: limite 1",V2:"Visitantes/dia: limite 2",V3:"Visitantes/dia: limite 3",P1:"Pico: limite 1",P2:"Pico: limite 2",P3:"Pico: limite 3",PequenaArea:"Área interna máxima para compartilhamento (m²)",ProdInterna:"Produtividade interna (m²)",ProdExterna:"Produtividade externa (m²)",PesoIUP:"Peso por ponto de IUP",PesoIPS:"Peso por ponto de IPS",PesoIHOS:"Peso por ponto de IHOS"};
+const NUM=["AreaInterna","AreaExterna","Dias","Horas","Pessoas","Visitantes","Pico","Sazonalidade","Sanitario","Publico","Vasos","Mictorios","Lavatorios","Chuveiros","AreaSanitaria","HorasSan","Reposicao","Hospedaria","Leitos","Quartos","Hospedes","Trocas","Lavanderia","Residuos","Lixeiras"];
+const TXT=["ID","UC","Gerencia","Categoria","Estrutura","Tipo","Observacoes","UCTipo","UCCadastro","Responsavel","Contato"];
+const LBL={ID:"ID",UC:"UC ou área protegida",Gerencia:"Gerência",Categoria:"Categoria",Estrutura:"Estrutura",Tipo:"Uso principal",AreaInterna:"Área interna",AreaExterna:"Área externa",Dias:"Dias de uso por semana",Horas:"Horas de uso por dia",Pessoas:"Trabalhadores habituais",Visitantes:"Visitantes por dia normal",Pico:"Visitantes em dia de pico",Sazonalidade:"Sazonalidade",Sanitario:"Possui sanitário",Publico:"Sanitário de uso público",Vasos:"Vasos sanitários",Mictorios:"Mictórios",Lavatorios:"Lavatórios",Chuveiros:"Chuveiros",AreaSanitaria:"Área sanitária",HorasSan:"Horas de disponibilidade sanitária",Reposicao:"Reposição de insumos",Hospedaria:"Possui hospedaria",Leitos:"Leitos",Quartos:"Quartos",Hospedes:"Hóspedes no mês típico",Trocas:"Entradas de grupos no mês",Lavanderia:"Lavanderia no escopo",Residuos:"Resíduos",Lixeiras:"Lixeiras",Observacoes:"Observações",UCTipo:"Tipo institucional",UCCadastro:"Origem do cadastro"};
+Object.assign(LBL,{Responsavel:"Nome do responsável",Contato:"Contato"});
+const DEP_SAN=["Publico","Vasos","Mictorios","Lavatorios","Chuveiros","AreaSanitaria","HorasSan","Reposicao"];
+const DEP_HOSP=["Leitos","Quartos","Hospedes","Trocas","Lavanderia"];
+const FLAGS=["Sanitario","Publico","Hospedaria","Lavanderia"];
+const RES=["IUP","FaixaIUP","IPS","ClasseSan","IH","IR","IHOS","FrequenciaExterna","FatorExterno","Modalidade","Compartilhamento","CargaTecnica"];
+
+
+/* ============ Valoração · CadTerc Vol. 03 ============ */
+const ITEMS=[["frio","Pisos frios","int"],["acarp","Pisos acarpetados","int"],["lab","Laboratórios","int"],["almox","Almoxarifados / galpões","int"],["ofic","Oficinas","int"],["saguao","Saguão, hall e salão","int"],["sanGC","Sanitários de grande circulação","int"],["pav","Pisos pavimentados adjacentes","ext"],["varr","Varrição de passeios e arruamentos","ext"],["patAlta","Pátios e áreas verdes · alta frequência","ext"],["patMedia","Pátios e áreas verdes · média frequência","ext"],["patBaixa","Pátios e áreas verdes · baixa frequência","ext"]];
+const ITENS=["A_acarp","A_lab","A_almox","A_ofic","A_saguao","A_pav","A_varr","A_patAlta","A_patMedia","A_patBaixa"];
+Object.assign(LBL,{A_acarp:"Pisos acarpetados",A_lab:"Laboratórios",A_almox:"Almoxarifados / galpões",A_ofic:"Oficinas",A_saguao:"Saguão, hall e salão",A_pav:"Pisos pavimentados adjacentes",A_varr:"Varrição de passeios e arruamentos",A_patAlta:"Pátios · alta frequência",A_patMedia:"Pátios · média frequência",A_patBaixa:"Pátios · baixa frequência"});
+const NUMK=k=>NUM.includes(k)||ITENS.includes(k);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const VDEF={Versao:"CadTerc Vol. 03 · data-base jan/2023 (versão 02, set/2023)",Regime:"ampla",Fator:1,LimitePequena:750,
+ ampla:{
+  geral:{frio:6.82,acarp:6.82,lab:12.39,almox:3.03,ofic:3.41,saguao:5.11,sanGC:8.38,pav:3.41,varr:0.72,patAlta:0.65,patMedia:0.32,patBaixa:0.17},
+  pequena:{frio:10.05,acarp:10.05,lab:18.25,almox:4.46,ofic:5.02,saguao:7.54,sanGC:13.16,pav:5.02,varr:1.04,patAlta:0.87,patMedia:0.44,patBaixa:0.22},
+  parque:{varr:0.90,posto8:7922.18,posto16:15844.36}},
+ restrita:{
+  geral:{frio:6.38,acarp:6.38,lab:11.58,almox:2.83,ofic:3.19,saguao:4.79,sanGC:7.79,pav:3.19,varr:0.67,patAlta:0.60,patMedia:0.30,patBaixa:0.16},
+  pequena:{frio:9.52,acarp:9.52,lab:17.29,almox:4.23,ofic:4.76,saguao:7.14,sanGC:12.34,pav:4.76,varr:0.99,patAlta:0.82,patMedia:0.42,patBaixa:0.21},
+  parque:{varr:0.84,posto8:7360.82,posto16:14721.64}}};
+function dm(a,b){const o=clone(a);if(!b||typeof b!=="object")return o;for(const k of Object.keys(o)){const x=b[k];if(x==null)continue;if(o[k]&&typeof o[k]==="object")o[k]=dm(o[k],x);else if(typeof o[k]==="number"){if(isFinite(Number(x)))o[k]=Number(x)}else o[k]=x}return o}
+/* Coeficientes de participação do CadTerc Vol. 03 (m² por funcionário) e jornadas de referência. Uso gerencial, não é exigência contratual (item 1.11). */
+const PROD={
+ geral:{frio:750,acarp:750,lab:413,almox:1688,ofic:1500,saguao:1000,sanGC:750,pav:1500,varr:7500},
+ pequena:{frio:375,acarp:375,lab:206.5,almox:844,ofic:750,saguao:500,sanGC:375,pav:750,varr:3750},
+ pat:{geral:1500,pequena:750},patH:{geral:[34.8,17.4,8.7],pequena:[17.4,8.7,4.35]},
+ jor:{geral:{hs:44,dias:6},pequena:{hs:24,dias:6},parque:{hs:44,dias:7}},ENC:0.03};
+const f1=n=>Number(n).toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1});
+const brl=n=>Number(n).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const brl0=n=>Number(n).toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+/* Cálculo do valor referencial mensal: área × valor unitário do CadTerc por tipo de serviço. */
+function valorar(r,x,v){
+  v=v||S.val;
+  const T=v[v.Regime]||v.ampla,ai=Number(r.AreaInterna)||0,ae=Number(r.AreaExterna)||0,as=Number(r.AreaSanitaria)||0;
+  const pequena=(ai+ae)<=v.LimitePequena,U=pequena?T.pequena:T.geral,parque=r.Categoria==="Parque Estadual",fator=v.Fator>0?v.Fator:1;
+  const tb=pequena?"pequena":"geral",hpm=PROD.jor[tb].hs*4.35;
+  const base={v:2,tabela:tb,regime:v.Regime,fator,versao:v.Versao,limite:v.LimitePequena,parque,jornada:pequena?"24 h por semana (meio período), 2ª a sábado":"44 h por semana, 2ª a sábado"};
+  if(Number(r.Dias)===0)return{...base,linhas:[],total:0,semUso:true,eq:0,enc:0,hm:0,dias:0};
+  const g=k=>Math.max(0,Number(r["A_"+k])||0),L=[];
+  const R=(n,d)=>Math.round(n*d)/d;
+  const add=(k,rot,a,pr,uni)=>{const t=R(a*pr*fator,100);if(!(a>0))return;
+    let eq=0,hm=0,dias=PROD.jor[tb].dias;const pi=["patAlta","patMedia","patBaixa"].indexOf(k);
+    if(pi>=0){hm=a/PROD.pat[tb]*PROD.patH[tb][pi];eq=hm/hpm}
+    else if(k==="varr"&&parque){eq=a/PROD.geral.varr;hm=eq*PROD.jor.parque.hs*4.35;dias=PROD.jor.parque.dias}
+    else if(PROD[tb][k]){eq=a/PROD[tb][k];hm=eq*hpm}
+    L.push({k,r:rot,a:R(a,100),pr,t,uni:uni||"m²",eq:R(eq,1000),hm:R(hm,10),dias})};
+  const sanQ=r.Sanitario===1&&r.Publico===1&&(x.ClasseSan==="SAN-3"||x.ClasseSan==="SAN-4");
+  const sanA=sanQ?as:0;
+  const remI=Math.max(0,ai-g("acarp")-g("lab")-g("almox")-g("ofic")-g("saguao")-sanA);
+  const galpao=r.Tipo==="Galpão / oficina";
+  add("frio","Pisos frios",galpao?0:remI,U.frio);
+  add("acarp","Pisos acarpetados",g("acarp"),U.acarp);
+  add("lab","Laboratórios",g("lab"),U.lab);
+  add("almox","Almoxarifados / galpões",g("almox")+(galpao?remI:0),U.almox);
+  add("ofic","Oficinas",g("ofic"),U.ofic);
+  add("saguao","Saguão, hall e salão",g("saguao"),U.saguao);
+  if(sanQ){
+    if(parque){const s16=x.ClasseSan==="SAN-4",pr=s16?T.parque.posto16:T.parque.posto8;L.push({k:"sanGC",r:"Posto sanitário em parque ("+(s16?"16":"8")+" h diárias)",a:0,pr,t:Math.round(pr*fator*100)/100,uni:"posto",eq:s16?2:1,hm:R((s16?16:8)*30.42,10),dias:7})}
+    else add("sanGC","Sanitários de grande circulação",sanA,U.sanGC);
+  }
+  const remE=x.FrequenciaExterna==="Não se aplica"?0:Math.max(0,ae-g("pav")-g("varr")-g("patAlta")-g("patMedia")-g("patBaixa"));
+  const pk=x.FrequenciaExterna==="Semanal"?"patAlta":x.FrequenciaExterna==="Quinzenal"?"patMedia":"patBaixa";
+  add("pav","Pisos pavimentados adjacentes",g("pav"),U.pav);
+  add("varr","Varrição de passeios e arruamentos",g("varr"),parque?T.parque.varr:U.varr);
+  add("patAlta","Pátios e áreas verdes · alta frequência",g("patAlta")+(pk==="patAlta"?remE:0),U.patAlta);
+  add("patMedia","Pátios e áreas verdes · média frequência",g("patMedia")+(pk==="patMedia"?remE:0),U.patMedia);
+  add("patBaixa","Pátios e áreas verdes · baixa frequência",g("patBaixa")+(pk==="patBaixa"?remE:0),U.patBaixa);
+  const eqT=R(L.reduce((s,l)=>s+l.eq,0),1000),hmT=R(L.reduce((s,l)=>s+l.hm,0),10);
+  return{...base,linhas:L,total:Math.round(L.reduce((s,l)=>s+l.t,0)*100)/100,semUso:false,eq:eqT,enc:R(eqT*PROD.ENC,1000),hm:hmT,dias:L.reduce((m,l)=>Math.max(m,l.dias),0)};
+}
+function valorRec(x){if(!hasRes(x))return null;if(x.ValorJSON){try{const j=JSON.parse(x.ValorJSON);if(j&&j.v===2&&typeof j.total==="number")return j}catch{}}return valorar(x,x,S.val)}
+function valTable(vv){
+  if(!vv)return"";
+  if(vv.semUso)return `<p class="note">Estrutura sem uso atual (0 dia por semana): valor referencial zero.</p>`;
+  const q=l=>l.uni==="posto"?"1 posto":f2(l.a)+" m²";
+  return `<h3 style="font-size:14px;margin-top:14px">Valor referencial mensal</h3><div class="tw"><table><thead><tr><th>Serviço</th><th class="n">Quantidade</th><th class="n">Unitário</th><th class="n">R$/mês</th></tr></thead><tbody>${vv.linhas.map(l=>`<tr><td>${esc(l.r)}</td><td class="n">${q(l)}</td><td class="n">${f2(l.pr*vv.fator)}</td><td class="n">${f2(l.t)}</td></tr>`).join("")||`<tr><td colspan="4" class="empty">Sem áreas informadas.</td></tr>`}</tbody><tfoot><tr><td colspan="3">Total</td><td class="n">${f2(vv.total)}</td></tr></tfoot></table></div><p class="note">Tabela ${vv.tabela==="pequena"?`de pequenas áreas (construído e externo até ${f0(vv.limite)} m²)`:"geral"} · ${vv.regime==="ampla"?"participação ampla":"participação restrita a ME/EPP"} · fator de reajuste ${vv.fator} · ${esc(vv.versao)}. Estimativa de referência, não é preço contratado.</p>${vv.semUso?"":`<p class="note">Equipe e horas: estimativa gerencial pelos coeficientes de participação do CadTerc (jornada de referência: ${esc(vv.jornada)}; 1 encarregado para 30 profissionais). Não deve constar do edital (item 1.11 do documento).</p>`}`;
+}
+
+const nv=(r,k)=>(r[k]==null||r[k]==="")?NaN:Number(r[k]);
+function check(r,recs,isEdit){
+  const blank=[],err=[];
+  ["UC","Gerencia","Estrutura","Tipo","Responsavel"].forEach(k=>{if(!String(r[k]??"").trim())blank.push(k)});
+  NUM.forEach(k=>{const x=nv(r,k);if(Number.isNaN(x))blank.push(k);else if(x<0)err.push(LBL[k]+" não pode ser negativo.")});
+  const g=k=>nv(r,k);
+  if(r.UC&&r.Estrutura&&recs.some(x=>x.ID!==r.ID&&x.UC===r.UC&&norm(x.Estrutura)===norm(r.Estrutura)))err.push("Já existe uma estrutura com este nome nesta UC.");
+  if(g("Dias")>7)err.push("Dias de uso deve estar entre 0 e 7.");
+  if(g("Horas")>24)err.push("Horas de uso deve estar entre 0 e 24.");
+  if(g("HorasSan")>24)err.push("Horas sanitárias devem estar entre 0 e 24.");
+  if(g("Sazonalidade")>2||g("Reposicao")>2)err.push("Sazonalidade e reposição aceitam 0 a 2.");
+  if(g("Residuos")>3)err.push("Resíduos aceita 0 a 3.");
+  if(FLAGS.some(k=>g(k)>1))err.push("Indicadores Sim/Não aceitam apenas 0 ou 1.");
+  if(g("Pico")<g("Visitantes"))err.push("Pico não pode ser menor que a visitação normal.");
+  if(g("AreaSanitaria")>g("AreaInterna"))err.push("Área sanitária não pode superar a área interna.");
+  if(g("Hospedaria")===1&&(g("Leitos")<=0||g("Quartos")<=0))err.push("Hospedaria exige leitos e quartos positivos.");
+  if(g("Sanitario")===0&&DEP_SAN.some(k=>g(k)>0))err.push("Há dados sanitários sem sanitário informado.");
+  if(g("Hospedaria")===0&&DEP_HOSP.some(k=>g(k)>0))err.push("Há dados de hospedagem sem hospedaria informada.");
+  ITENS.forEach(k=>{if(nv(r,k)<0)err.push(LBL[k]+" não pode ser negativo.")});
+  const sI=["A_acarp","A_lab","A_almox","A_ofic","A_saguao"].reduce((a,k)=>a+(nv(r,k)||0),0),sE=["A_pav","A_varr","A_patAlta","A_patMedia","A_patBaixa"].reduce((a,k)=>a+(nv(r,k)||0),0);
+  if(sI>(g("AreaInterna")||0))err.push("A soma das áreas internas detalhadas supera a área interna.");
+  if(sE>(g("AreaExterna")||0))err.push("A soma das áreas externas detalhadas supera a área externa.");
+  return{blank,err};
+}
+function paramErr(p){
+  const e=[];
+  if(!(p.ProdInterna>0)||!(p.ProdExterna>0))e.push("As produtividades devem ser positivas.");
+  if(!(p.V1<p.V2&&p.V2<p.V3&&p.P1<p.P2&&p.P2<p.P3))e.push("Os limites de faixas devem ser estritamente crescentes.");
+  if(!(p.PequenaArea>0))e.push("A área de pequeno porte deve ser positiva.");
+  return e;
+}
+function calc(r,p){
+  const v=r.Visitantes,pk=r.Pico,d=r.Dias,h=r.Horas;
+  const IUP=(v<=0?0:v<=p.V1?1:v<=p.V2?2:v<=p.V3?3:4)+(pk<=p.P1?0:pk<=p.P2?1:pk<=p.P3?2:3)+(d<=3?0:d<=5?1:2)+(h<=4?0:h<=8?1:2)+r.Sazonalidade;
+  const FaixaIUP=IUP<=3?"Baixo":IUP<=6?"Moderado":IUP<=9?"Intenso":"Muito intenso";
+  const IPS=r.Sanitario===0?0:r.Publico*2+(v<=30?0:v<=300?1:2)+(pk<=100?0:pk<=800?1:2)+(r.HorasSan<=4?0:r.HorasSan<=8?1:2)+((r.Vasos+r.Mictorios)<=2?0:(r.Vasos+r.Mictorios)<=8?1:2)+r.Reposicao;
+  const ClasseSan=r.Sanitario===0?"Não se aplica":r.Publico===0?"SAN-1":IPS<=5?"SAN-2":r.HorasSan<=8?"SAN-3":"SAN-4";
+  const IH=r.Hospedaria===0?0:r.Hospedes/r.Leitos, IR=r.Hospedaria===0?0:r.Trocas/r.Quartos, IHOS=IH+IR;
+  const FrequenciaExterna=r.AreaExterna===0?"Não se aplica":(r.Residuos>=2||IUP>=7)?"Semanal":(r.Residuos===1||IUP>=4)?"Quinzenal":"Mensal";
+  const FatorExterno=r.AreaExterna===0?0:FrequenciaExterna==="Semanal"?1:FrequenciaExterna==="Quinzenal"?0.5:0.25;
+  const cob=(IPS>=6||IUP>=7);
+  const Modalidade=d===0?"Sem uso atual":cob?"Regular com cobertura":(r.AreaInterna<=p.PequenaArea&&d<=3)?"Volante":r.AreaInterna<=p.PequenaArea?"Compartilhado":"Regular";
+  const Compartilhamento=d===0?"A avaliar":cob?"Baixo":r.AreaInterna<=p.PequenaArea?"Alto":"A avaliar";
+  const CargaTecnica=((r.AreaInterna/p.ProdInterna)*(d/7)+(r.AreaExterna/p.ProdExterna)*FatorExterno)*(1+IUP*p.PesoIUP+IPS*p.PesoIPS+IHOS*p.PesoIHOS);
+  return{IUP,FaixaIUP,IPS,ClasseSan,IH,IR,IHOS,FrequenciaExterna,FatorExterno,Modalidade,Compartilhamento,CargaTecnica};
+}
+
+/* ============ Estado ============ */
+/* ============ Perfis ============ */
+const S={view:"painel",recs:[],params:{...DEF},paramsDoc:false,db:null,me:{id:null,canEdit:false},
+  fGer:"",fSt:"",fQ:"",hideDemo:false,ucQ:"",ucG:"",ucManual:false,isAdmin:false,isOwner:false,recE:[],recL:[],legIds:new Set(),acc:null,accReady:false,accAll:[],pedidos:[],pedido:null,viewAs:"",asg:null,exp:null,psRes:[],autoName:"",form:null,edit:null,saving:false,names:{}};
+S.val=clone(VDEF);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const f0=n=>Number(n).toLocaleString("pt-BR",{maximumFractionDigits:0});
+const f2=n=>Number(n).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fdt=s=>{try{return new Date(s).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}catch{return""}};
+const slug=id=>String(id).trim().replace(/[^A-Za-z0-9_\-.~:@+]/g,"_").slice(0,150);
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3800)}
+const hasRes=x=>typeof x.IUP==="number";
+const stCls=s=>"s-"+s.replace(/ /g,"-");
+const stPill=s=>`<span class="pill ${s==="Validado"||s==="Homologado"?"ok":s==="Devolvido"?"warn":s==="Em validação"?"info":""}">${esc(sl(s))}</span>`;
+const iupPill=f=>`<span class="pill ${f==="Baixo"?"ok":f==="Intenso"?"warn":f==="Muito intenso"?"crit":""}">${esc(f)}</span>`;
+
+/* ============ Dados ============ */
+function setSync(ok,msg){$("#sync").innerHTML=`<span class="dot ${ok?"":"off"}"></span><span>${esc(msg)}</span>`}
+async function boot(){
+  try{
+    const u=window.claude?.use?await window.claude.use("user"):null;
+    if(u){S.isAdmin=await u.canEdit();try{S.isOwner=await u.isOwner()}catch{S.isOwner=S.isAdmin}S.me.canEdit=S.isAdmin;try{S.can=await u.can("data.write")}catch{S.can=null}try{const m=await u.me();S.me.id=m.id||null;S.me.name=m.name||""}catch{try{S.me.id=await u.id()}catch{}}}
+    S._user=u;
+  }catch{}
+  try{S.db=window.claude?.use?await window.claude.use("db"):null}catch{S.db=null}
+  if(S.db){
+    setSync(true,"Base compartilhada conectada");
+    /* Envios: cada pessoa grava só em envios/<seu id>. Quem tem nível de edição lê todos; os demais leem apenas o próprio documento (regras do banco). */
+    const setRecs=()=>{const m=new Map();S.recL.forEach(x=>m.set(x.ID,x));S.recE.forEach(x=>m.set(x.ID,x));S.recs=[...m.values()];onData()};
+    const flat=docs=>{const o=[];docs.forEach(d=>{const R=((d&&d.data&&d.data())||{}).Recs||{};Object.values(R).forEach(x=>{if(x&&x.ID&&!x.Excluido)o.push(x)})});return o};
+    const errR=()=>setSync(false,"Leitura interrompida");
+    if(S.isAdmin){
+      S.db.collection("envios").onSnapshot(sn=>{S.recE=flat(sn.docs);setRecs()},errR);
+      S.db.collection("diagnosticos").onSnapshot(sn=>{S.recL=sn.docs.map(d=>d.data()).filter(x=>x&&x.ID);S.legIds=new Set(S.recL.map(x=>x.ID));setRecs()},()=>{});
+    }else if(S.me.id){
+      S.db.doc("envios/"+slug(S.me.id)).onSnapshot(sn=>{S.recE=flat([sn]);setRecs()},errR);
+    }
+    if(S.isAdmin){
+      S.db.collection("acessos").onSnapshot(sn=>{S.accAll=sn.docs.map(d=>d.data());onData()},()=>{});
+      S.db.collection("pedidos").onSnapshot(sn=>{S.pedidos=sn.docs.map(d=>d.data());onData()},()=>{});
+    }
+    if(S.me.id){
+      S.db.doc("acessos/"+slug(S.me.id)).onSnapshot(sn=>{S.acc=sn.exists?sn.data():null;S.accReady=true;onData()},()=>{S.accReady=true;onData()});
+      S.db.doc("pedidos/"+slug(S.me.id)).onSnapshot(sn=>{S.pedido=sn.exists?sn.data():null;onData()},()=>{});
+    }else S.accReady=true;
+    S.db.doc("config/valores").onSnapshot(sn=>{S.val=sn.exists?dm(VDEF,sn.data()):clone(VDEF);S.valDoc=sn.exists;onData()},()=>{});
+    S.db.doc("config/parametros").onSnapshot(sn=>{if(sn.exists){const d=sn.data();S.params={...DEF,...d};S.paramsDoc=true}else{S.params={...DEF};S.paramsDoc=false}onData()},()=>{});
+  }else{setSync(false,"Modo local: os dados valem só para esta sessão");onData()}
+  render();
+}
+function onData(){
+  if(S.view==="form"||$("#dlg").open)return;
+  if(S.view==="exp"&&S.exp){renderTabs();renderWho();expPreview();return}
+  render();
+}
+async function saveRec(doc){
+  if(!S.db){const i=S.recs.findIndex(x=>x.ID===doc.ID);if(i>=0)S.recs[i]=doc;else S.recs.push(doc);return}
+  const k=slug(doc.ID),own=doc.CriadoPor;
+  if(S.legIds.has(doc.ID)||!own||own==="anon"||own==="seed"){await S.db.doc("diagnosticos/"+k).set(doc);return}
+  const used=S.recs.filter(x=>x.CriadoPor===own&&x.ID!==doc.ID).reduce((a,x)=>a+JSON.stringify(x).length,0)+JSON.stringify(doc).length;
+  if(used>235000)throw{message:"limite de armazenamento por pessoa atingido (cerca de 60 estruturas). Fale com o Administrador."};
+  const ref=S.db.doc("envios/"+slug(own));
+  try{await ref.update({Recs:{[k]:doc}})}
+  catch(e){if(e&&e.code==="invalid_argument")await ref.set({Uid:own,Em:new Date().toISOString(),Recs:{[k]:doc}});else throw e}
+}
+async function delRec(x){
+  if(!S.db){S.recs=S.recs.filter(r=>r.ID!==x.ID);return}
+  if(S.legIds.has(x.ID)){await S.db.doc("diagnosticos/"+slug(x.ID)).delete();return}
+  await saveRec({...x,Excluido:true,AtualizadoEm:new Date().toISOString()});
+}
+async function names(ids){
+  const need=[...new Set(ids.filter(i=>i&&!(i in S.names)))];
+  if(!need.length||!S._user)return false;
+  try{const ps=await S._user.profiles(need);need.forEach(i=>S.names[i]=(ps[i]&&ps[i].name)||"Usuário");return true}catch{return false}
+}
+const who=id=>id?(S.names[id]||"Usuário"):"—";
+function perfil(){
+  if(S.viewAs&&S.isAdmin)return S.viewAs;
+  if(S.isOwner)return "admin";
+  if(S.isAdmin&&!(S.acc&&S.acc.Perfil))return "admin";
+  if(!S.db)return (window.claude&&window.claude.use)?null:"admin";
+  return (S.acc&&S.acc.Perfil)||null;
+}
+const tester=()=>!!(S.viewAs&&S.isAdmin);
+const allUC=()=>new Set(UCS.map(u=>u[0]));
+function myUCs(){return perfil()==="gestor"&&!tester()?new Set((S.acc&&S.acc.UCs)||[]):allUC()}
+function myGer(){return perfil()==="gerente"&&!tester()?new Set((S.acc&&S.acc.Gerencias)||[]):new Set(GER)}
+function ucInScope(u){const p=perfil();if(p==="gestor")return myUCs().has(u[0]);if(p==="gerente")return myGer().has(u[2]);return true}
+function inScope(x){const p=perfil();if(p==="gestor")return myUCs().has(x.UC)&&(tester()||x.CriadoPor===S.me.id);if(p==="gerente")return myGer().has(x.Gerencia);if(p==="final")return x.Status==="Homologado";if(p==="validador")return x.Status==="Validado"||x.Status==="Homologado"||x.Status==="Devolvido";return true}
+const canFill=()=>{const p=perfil();return p==="admin"||p==="gestor"};
+const canEditRec=x=>{const p=perfil();return p==="admin"||(p==="gestor"&&myUCs().has(x.UC)&&x.CriadoPor===S.me.id)};
+const canHomolog=x=>{const p=perfil();return x.Status==="Validado"&&(p==="admin"||p==="validador")};
+const canApprove=x=>{const p=perfil();return x.Status==="Em validação"&&(p==="admin"||(p==="gerente"&&myGer().has(x.Gerencia)))};
+const gersVis=()=>GER.filter(g=>UCS.some(u=>u[2]===g&&ucInScope(u)));
+function tabsFor(){
+  const p=perfil();if(!p)return[["acc","Acesso"]];
+  const T={minha:"Minhas UCs",painel:"Painel gerencial",form:"Preenchimento",reg:p==="gerente"?"Aprovações":p==="validador"?"Validação final":"Registros",exp:"Exportar",acc:"Acessos",par:"Parâmetros",guia:"Guia do painel"};
+  const m={admin:["painel","form","reg","exp","acc","par","guia"],gestor:["minha","painel","form","reg","guia"],gerente:["painel","reg","guia"],validador:["painel","reg","exp","guia"],final:["painel","exp","guia"]}[p];
+  return m.map(k=>[k,T[k]]);
+}
+function renderWho(){
+  const p=perfil();let h="";
+  if(p)h=(S.me.name?esc(S.me.name)+" · ":"")+`<span class="pill info">${PERFIS[p]}${tester()?" (teste)":""}</span>`;
+  else h="Sem perfil atribuído";
+  if(perfil()==="admin"&&S.isAdmin&&S.db)h+=` <select class="vas" id="vAs" aria-label="Ver como">${[["","Administrador"],["gestor","Ver como Gestor"],["gerente","Ver como Gerente"],["validador","Ver como Validador final"],["final","Ver como Usuário final"]].map(([v,t])=>`<option value="${v}" ${S.viewAs===v?"selected":""}>${t}</option>`).join("")}</select>`;
+  $("#whoami").innerHTML=h;
+}
+
+/* ============ Navegação ============ */
+function go(v){S.view=v;render();window.scrollTo({top:0})}
+function renderTabs(){
+  const tb=tabsFor();if(!tb.some(t=>t[0]===S.view))S.view=tb[0][0];
+  $("#tabs").innerHTML=tb.map(([k,l])=>`<button role="tab" data-view="${k}" aria-selected="${k===S.view}">${l}</button>`).join("");
+}
+function render(){
+  const m=$("#main");
+  if(!S.isOwner&&S.db&&S.me.id&&!S.accReady){$("#tabs").innerHTML="";renderWho();m.innerHTML='<div class="panel empty">Carregando perfil…</div>';return}
+  if(!S.started){S.started=true;if(perfil()==="gestor")S.view="minha"}
+  renderTabs();renderWho();
+  if(S.view==="minha")m.innerHTML=vMinha();
+  else if(S.view==="painel")m.innerHTML=vPainel();
+  else if(S.view==="exp")vExp(m);
+  else if(S.view==="acc"){m.innerHTML=vAcc();if(S.isAdmin&&S.db){names([...S.pedidos.map(p=>p.Uid),...S.accAll.map(a=>a.Uid)]).then(f=>{if(f&&S.view==="acc"&&!$("#dlg").open&&document.activeElement?.id!=="pSearch")$("#main").innerHTML=vAcc()})}}
+  else if(S.view==="form")vForm(m);
+  else if(S.view==="reg")m.innerHTML=vReg();
+  else if(S.view==="par")m.innerHTML=vPar();
+  else m.innerHTML=vGuia();
+  const pf=perfil();
+  if(S.db&&!S.isAdmin&&(pf==="gerente"||pf==="validador"||pf==="final")&&S.view!=="form")m.insertAdjacentHTML("afterbegin",`<div class="banner">Para ler os envios de outras pessoas, seu compartilhamento precisa estar no nível "Pode editar". Peça ao Administrador para ajustar. Até lá, esta tela mostra apenas o que você mesmo enviou.</div>`);
+}
+
+/* ============ Painel ============ */
+function filtered(){return S.recs.filter(x=>inScope(x)&&(!S.fGer||x.Gerencia===S.fGer)&&(!S.fSt||x.Status===S.fSt)&&!(S.hideDemo&&x.Exemplo))}
+function hbars(rows,fmt,alt){
+  const mx=Math.max(...rows.map(r=>r.v),0)||1;
+  return `<div class="hb">`+rows.map(r=>`<div class="lab">${esc(r.l)}</div><div class="track"><span class="fill ${alt?"alt":""}" style="width:${(r.v/mx*100).toFixed(1)}%"></span></div><div class="val">${fmt(r.v)}</div>`).join("")+`</div>`;
+}
+function filtersBar(){
+  return `<div class="bar filters"><select id="fGer" aria-label="Gerência"><option value="">Todas as Gerências</option>${gersVis().map(g=>`<option ${S.fGer===g?"selected":""}>${g}</option>`).join("")}</select>
+  <select id="fSt" aria-label="Situação"><option value="">Todas as situações</option>${STATUS.map(g=>`<option value="${g}" ${S.fSt===g?"selected":""}>${sl(g)}</option>`).join("")}</select>
+  <span class="sp"></span><label class="sync"><input type="checkbox" id="fDemo" ${S.hideDemo?"checked":""} style="width:auto;min-height:0"> Ocultar exemplos</label><span class="sync">Regra: <span class="mono">${esc(S.params.VersaoRegra)}</span></span></div>`;
+}
+function vPainel(){
+  const all=filtered(),R=all.filter(hasRes);
+  if(!S.recs.length)return filtersBar()+`<div class="panel empty">Nenhum diagnóstico registrado. Use <b>Preenchimento</b> para cadastrar a primeira estrutura, quando o seu perfil permitir.</div>`;
+  const cnt=s=>all.filter(x=>x.Status===s).length;
+  const catN=new Set(UCS.filter(u=>ucInScope(u)&&(!S.fGer||u[2]===S.fGer)).map(u=>u[0]));const cov=new Set(all.filter(x=>catN.has(x.UC)).map(x=>x.UC)).size;
+  const sumA=k=>R.reduce((a,x)=>a+(x[k]||0),0);
+  const vtot=R.reduce((a,x)=>a+(valorRec(x)?.total||0),0);
+  const valid=cnt("Validado")+cnt("Homologado"), hom=cnt("Homologado"), tot=all.length;
+  const kp=`<div class="kpis">
+    <div class="kpi"><div class="l">Estruturas registradas</div><div class="v">${f0(tot)}</div><div class="s">${f0(cov)} de ${f0(catN.size)} UCs do cadastro</div></div>
+    <div class="kpi"><div class="l">Aprovadas pela Gerência</div><div class="v">${tot?Math.round(valid/tot*100):0}%</div><div class="s">${f0(valid)} de ${f0(tot)} · ${f0(hom)} com validação final</div></div>
+    <div class="kpi"><div class="l">Aguardando aprovação</div><div class="v">${f0(cnt("Em validação"))}</div><div class="s">${f0(cnt("Devolvido"))} devolvidas</div></div>
+    <div class="kpi"><div class="l">Área interna (m²)</div><div class="v">${f0(sumA("AreaInterna"))}</div><div class="s">registros concluídos</div></div>
+    <div class="kpi"><div class="l">Área externa (m²)</div><div class="v">${f0(sumA("AreaExterna"))}</div><div class="s">registros concluídos</div></div>
+    <div class="kpi"><div class="l">Valor referencial (R$/mês)</div><div class="v">${brl0(vtot)}</div><div class="s">CadTerc Vol. 03 · ${S.val.Regime==="ampla"?"participação ampla":"ME/EPP"}</div></div></div>`;
+  const stk=`<div class="stack" role="img" aria-label="Andamento por situação">`+STATUS.map(s=>{const c=cnt(s);return c?`<span class="${stCls(s)}" style="flex:${c}">${c}</span>`:""}).join("")+`</div><div class="legend">`+STATUS.map(s=>`<span><span class="pill ${s==="Validado"||s==="Homologado"?"ok":s==="Devolvido"?"warn":s==="Em validação"?"info":""}">${sl(s)}</span> <b>${cnt(s)}</b></span>`).join("")+`</div>`;
+  const byG=gersVis().map(g=>{const a=all.filter(x=>x.Gerencia===g),r=a.filter(hasRes);return{g,u:UCS.filter(u=>u[2]===g&&ucInScope(u)).length,uc:new Set(a.map(x=>x.UC).filter(n=>UCS.some(u=>u[0]===n))).size,n:a.length,v:a.filter(x=>x.Status==="Validado"||x.Status==="Homologado").length,p:a.filter(x=>x.Status==="Rascunho"||x.Status==="Devolvido").length,ai:r.reduce((s,x)=>s+x.AreaInterna,0),ae:r.reduce((s,x)=>s+x.AreaExterna,0),c:r.reduce((s,x)=>s+x.CargaTecnica,0),vr:r.reduce((s,x)=>s+(valorRec(x)?.total||0),0)}});
+  const cg=hbars(byG.filter(x=>x.vr>0).sort((a,b)=>b.vr-a.vr).map(x=>({l:x.g,v:x.vr})),brl0);
+  const cnts=(key,order)=>hbars(order.map(o=>({l:o,v:R.filter(x=>x[key]===o).length})),f0,true);
+  const aten=R.filter(x=>x.IUP>=7||x.IPS>=6).sort((a,b)=>b.CargaTecnica-a.CargaTecnica).slice(0,8);
+  const pend=all.filter(x=>x.Status==="Devolvido"||x.Status==="Rascunho").sort((a,b)=>(b.AtualizadoEm||"").localeCompare(a.AtualizadoEm||"")).slice(0,8);
+  const fila=S.recs.filter(canApprove).length;
+  const filaH=S.recs.filter(canHomolog).length;
+  const bn2=filaH&&(perfil()==="validador"||perfil()==="admin")?`<div class="banner" style="background:var(--info-soft);color:var(--info)"><b>${filaH}</b> estrutura(s) aprovada(s) pela Gerência aguardando validação final. <button class="btn sm" data-act="filaH">Abrir fila</button></div>`:"";
+  const bn=fila&&(perfil()==="gerente"||perfil()==="admin")?`<div class="banner" style="background:var(--info-soft);color:var(--info)"><b>${fila}</b> estrutura(s) aguardando aprovação. <button class="btn sm" data-act="fila">Abrir fila</button></div>`:"";
+  return filtersBar()+bn+bn2+kp+`
+  <div class="grid g2">
+    <section class="panel"><h2>Andamento do preenchimento</h2><p class="sub">Situação de todas as estruturas do filtro</p>${stk}<p class="note">Só entram nos indicadores as estruturas concluídas (com resultado calculado).</p></section>
+    <section class="panel"><h2>Valor referencial por Gerência</h2><p class="sub">Soma mensal dos registros concluídos, pela tabela do CadTerc</p>${cg||'<div class="empty">Sem registros concluídos.</div>'}</section>
+  </div>
+  <div class="grid g3">
+    <section class="panel"><h2>Intensidade de uso (IUP)</h2><p class="sub">Estruturas por faixa, escala 0–13</p>${cnts("FaixaIUP",["Baixo","Moderado","Intenso","Muito intenso"])}</section>
+    <section class="panel"><h2>Modalidade indicada</h2><p class="sub">Hipótese de atendimento, a confirmar</p>${cnts("Modalidade",["Regular com cobertura","Regular","Compartilhado","Volante","Sem uso atual"])}</section>
+    <section class="panel"><h2>Classe sanitária</h2><p class="sub">Uso interno a intenso</p>${cnts("ClasseSan",["SAN-1","SAN-2","SAN-3","SAN-4","Não se aplica"])}</section>
+  </div>
+  <section class="panel" style="margin-top:16px"><h2>Situação por Gerência</h2><p class="sub">Cobertura do diagnóstico e dimensão do escopo</p><div class="tw"><table>
+    <thead><tr><th>Gerência</th><th class="n">UCs no cadastro</th><th class="n">UCs com diagnóstico</th><th class="n">Estruturas</th><th class="n">Aprovadas</th><th class="n">Pendentes</th><th class="n">Área int. m²</th><th class="n">Área ext. m²</th><th class="n">Valor ref. R$/mês</th></tr></thead><tbody>
+    ${byG.map(x=>`<tr class="${x.n?"":"zero"}"><td>${x.g}</td><td class="n">${x.u}</td><td class="n">${x.uc}</td><td class="n">${x.n}</td><td class="n">${x.v}</td><td class="n">${x.p}</td><td class="n">${f0(x.ai)}</td><td class="n">${f0(x.ae)}</td><td class="n">${f0(x.vr)}</td></tr>`).join("")}
+    </tbody></table></div><p class="note">Cadastro: relação do Notion ("Áreas protegidas"), sincronizada em ${SYNC}. Gerência sem registro aparece em cinza: lacuna de cobertura, não ausência de estruturas.</p></section>
+  <div class="grid g2">
+    <section class="panel"><h2>Estruturas que exigem atenção</h2><p class="sub">IUP a partir de 7 ou IPS a partir de 6, por carga</p>
+      ${aten.length?`<div class="tw"><table><thead><tr><th>Estrutura</th><th>UC</th><th>IUP</th><th class="n">IPS</th><th class="n">Carga</th></tr></thead><tbody>${aten.map(x=>`<tr class="click" data-open="${esc(x.ID)}"><td>${esc(x.Estrutura)}</td><td>${esc(x.UC)}</td><td>${iupPill(x.FaixaIUP)} <span class="mono">${x.IUP}</span></td><td class="n">${x.IPS}</td><td class="n">${f2(x.CargaTecnica)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">Nenhuma estrutura no filtro atende ao critério.</div>'}</section>
+    <section class="panel"><h2>Pendências de preenchimento</h2><p class="sub">Rascunhos e registros devolvidos</p>
+      ${pend.length?`<div class="tw"><table><thead><tr><th>Estrutura</th><th>Gerência</th><th>Situação</th></tr></thead><tbody>${pend.map(x=>`<tr class="click" data-open="${esc(x.ID)}"><td>${esc(x.Estrutura||x.ID)}<div class="note" style="margin:0">${esc(x.UC)}${x.MotivoDevolucao&&x.Status==="Devolvido"?" · "+esc(x.MotivoDevolucao):""}</div></td><td>${esc(x.Gerencia)}</td><td>${stPill(x.Status)}</td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">Sem pendências.</div>'}</section>
+  </div>
+  <p class="note">O valor referencial é a estimativa mensal pela tabela do CadTerc (Vol. 03), aplicada às áreas informadas. Não é preço contratado. A carga técnica relativa é apenas índice comparativo, sem equivalência a trabalhadores nem a preço. Parâmetros e pesos marcados como proposta dependem de aprovação institucional.</p>`;
+}
+
+/* ============ Minhas UCs (Gestor) ============ */
+function ucSum(rs){const o={n:0,val:0,eq:0,enc:0,hm:0,dias:0,jor:new Set()};rs.filter(x=>x.Status!=="Rascunho").forEach(x=>{const v=valorRec(x);if(!v)return;o.n++;o.val+=v.total;o.eq+=v.eq||0;o.enc+=v.enc||0;o.hm+=v.hm||0;o.dias=Math.max(o.dias,v.dias||0);if(!v.semUso)o.jor.add(v.jornada)});return o}
+function kpiStrip(o){
+  if(!o.n)return `<p class="note" style="margin:0 0 8px">Ainda não há estrutura enviada com valor calculado.</p>`;
+  return `<div class="kpis" style="margin:8px 0 12px"><div class="kpi"><div class="l">Valor mensal alocado</div><div class="v">${brl(o.val)}</div><div class="s">${brl0(o.val*12)} em 12 meses</div></div>
+  <div class="kpi"><div class="l">Equipe à disposição</div><div class="v">${f1(o.eq)}</div><div class="s">postos equivalentes, mais ${f2(o.enc)} de encarregado</div></div>
+  <div class="kpi"><div class="l">Tempo de serviço</div><div class="v">${f0(o.hm)} h</div><div class="s">de trabalho por mês, ${f0(o.hm*12)} h em 12 meses</div></div>
+  <div class="kpi"><div class="l">Dias de serviço</div><div class="v">${o.dias||"—"} por semana</div><div class="s">${[...o.jor].map(esc).join("; ")||"sem uso atual"}</div></div></div>
+  <p class="note" style="margin:0 0 8px">Considera ${o.n} estrutura(s) enviada(s), exceto rascunhos. Equipe e horas são estimativas gerenciais pelos coeficientes do CadTerc Vol. 03, e não podem ser exigidas no edital (item 1.11).</p>`;
+}
+function resumoUCs(ucs){
+  const rs=S.recs.filter(x=>ucs.includes(x.UC)&&!(S.hideDemo&&x.Exemplo));
+  return `<section class="panel" style="margin-bottom:14px"><h2 style="font-size:18px">Resumo das minhas UCs</h2><p class="sub">${ucs.length} UC(s). Valor, equipe e tempo estimados a partir das áreas informadas.</p>${kpiStrip(ucSum(rs))}</section>`;
+}
+function vMinha(){
+  let ucs=perfil()==="gestor"&&!tester()?[...myUCs()]:[...new Set(S.recs.filter(inScope).map(x=>x.UC))];
+  ucs.sort((a,b)=>a.localeCompare(b));
+  if(!ucs.length)return `<div class="panel empty">Nenhuma UC atribuída ao seu perfil. Solicite a atribuição ao administrador.</div>`;
+  return `<p class="note" style="margin:0 0 12px">Cada UC pode ter várias estruturas. Use <b>Adicionar estrutura</b> para cadastrar a próxima; no formulário, <b>Enviar e cadastrar outra</b> mantém a mesma UC.</p>`+resumoUCs(ucs)+ucs.map(uc=>{
+    const rs=S.recs.filter(x=>x.UC===uc).sort((a,b)=>(a.Estrutura||"").localeCompare(b.Estrutura||"")),u=UCS.find(z=>z[0]===uc);
+    const c=s=>rs.filter(x=>x.Status===s).length,n=rs.length,dev=c("Devolvido");
+    return `<section class="panel" style="margin-bottom:14px"><div class="bar" style="margin:0 0 8px"><h2 style="font-size:18px">${esc(uc)}</h2>${u?`<span class="pill ok">${u[2]}</span><span class="pill">${esc(CATS[u[1]])}</span>`:""}<span class="sp"></span><button class="btn pri" data-act="novaUc" data-nuc="${esc(uc)}">Adicionar estrutura</button></div>
+    <p class="note" style="margin:0 0 8px">${n?`${n} estrutura(s): ${c("Validado")} aprovada(s) pela Gerência, ${c("Homologado")} com validação final, ${c("Em validação")} em aprovação, ${c("Rascunho")} rascunho(s), ${dev} devolvida(s).`:"Nenhuma estrutura cadastrada ainda."}</p>
+    ${n?kpiStrip(ucSum(rs)):""}
+    ${dev?`<div class="banner">${dev} estrutura(s) devolvida(s) aguardando correção.</div>`:""}
+    ${n?`<div class="tw"><table><thead><tr><th>Estrutura</th><th>Situação</th><th>Responsável</th><th class="n">Valor (R$/mês)</th><th class="n">Equipe eq.</th><th>Atualizado</th></tr></thead><tbody>${rs.map(x=>`<tr class="click" data-open="${esc(x.ID)}"><td>${esc(x.Estrutura)}${x.Exemplo?' <span class="pill">Exemplo</span>':""}${x.Status==="Devolvido"&&x.MotivoDevolucao?`<div class="note" style="margin:0">${esc(x.MotivoDevolucao)}</div>`:""}</td><td>${stPill(x.Status)}</td><td>${esc(x.Responsavel||"—")}</td><td class="n">${hasRes(x)?f2(valorRec(x).total):"—"}</td><td class="n">${hasRes(x)?f2(valorRec(x).eq):"—"}</td><td>${fdt(x.AtualizadoEm)}</td></tr>`).join("")}</tbody></table></div>`:""}</section>`}).join("");
+}
+
+/* ============ Registros ============ */
+function vReg(){
+  const q=S.fQ.toLowerCase();
+  const rows=filtered().filter(x=>!q||[x.ID,x.UC,x.Estrutura,x.Responsavel].some(t=>String(t||"").toLowerCase().includes(q))).sort((a,b)=>(b.AtualizadoEm||"").localeCompare(a.AtualizadoEm||""));
+  return `<div class="bar filters"><input type="text" id="fQ" placeholder="Buscar por UC, estrutura ou responsável" value="${esc(S.fQ)}" aria-label="Buscar"><select id="fGer" aria-label="Gerência"><option value="">Todas as Gerências</option>${gersVis().map(g=>`<option ${S.fGer===g?"selected":""}>${g}</option>`).join("")}</select>
+   <select id="fSt" aria-label="Situação"><option value="">Todas as situações</option>${STATUS.map(g=>`<option value="${g}" ${S.fSt===g?"selected":""}>${sl(g)}</option>`).join("")}</select><span class="sp"></span>
+   <label class="sync"><input type="checkbox" id="fDemo" ${S.hideDemo?"checked":""} style="width:auto;min-height:0"> Ocultar exemplos</label>${perfil()==="admin"?`<button class="btn" data-act="csv">Exportar CSV (modelo)</button>`:""}${canFill()?`<button class="btn pri" data-act="novo">Novo diagnóstico</button>`:""}</div>
+  <div class="panel"><div class="tw"><table><thead><tr><th>Estrutura</th><th>UC / Gerência</th><th>Situação</th><th>Responsável</th><th>IUP</th><th>Classe san.</th><th>Modalidade</th><th class="n">Valor ref. (R$/mês)</th><th>Atualizado</th></tr></thead><tbody>
+  ${rows.map(x=>`<tr class="click" data-open="${esc(x.ID)}"><td>${esc(x.Estrutura)}${x.Exemplo?' <span class="pill">Exemplo</span>':""}</td><td>${esc(x.UC)}<div class="note" style="margin:0">${esc(x.Gerencia)}</div></td><td>${stPill(x.Status)}</td><td>${esc(x.Responsavel||"—")}</td><td>${hasRes(x)?iupPill(x.FaixaIUP)+' <span class="mono">'+x.IUP+'</span>':"—"}</td><td>${hasRes(x)?esc(x.ClasseSan):"—"}</td><td>${hasRes(x)?esc(x.Modalidade):"—"}</td><td class="n">${hasRes(x)?f2(valorRec(x).total):"—"}</td><td>${fdt(x.AtualizadoEm)}</td></tr>`).join("")||`<tr><td colspan="8" class="empty">Nenhum registro para o filtro.</td></tr>`}
+  </tbody></table></div></div>`;
+}
+async function openRec(id){
+  const x=S.recs.find(r=>r.ID===id);if(!x)return;
+  await names([x.CriadoPor,...(x.Hist||[]).map(h=>h.por)]);
+  const kv=(l,v)=>`<div><span>${l}</span><b>${v}</b></div>`;
+  const canV=canApprove(x),canH=canHomolog(x),canE=canEditRec(x),vv=valorRec(x);
+  $("#dlgBody").innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h2>${esc(x.Estrutura)}</h2><p class="note" style="margin:2px 0 0">${esc(x.UC)} · ${esc(x.Gerencia)} · <span class="mono">${esc(x.ID)}</span> · revisão ${x.Revisao||1}</p><p class="note" style="margin:2px 0 0">Responsável pelo preenchimento: <b>${esc(x.Responsavel||"—")}</b>${x.Contato?" · "+esc(x.Contato):""}</p></div>${stPill(x.Status)}</div>
+  ${hasRes(x)?`<div class="kv">${kv("IUP",x.IUP+" · "+esc(x.FaixaIUP))}${kv("IPS / classe",x.IPS+" · "+esc(x.ClasseSan))}${kv("IHOS",f2(x.IHOS))}${kv("Frequência externa",esc(x.FrequenciaExterna))}${kv("Modalidade",esc(x.Modalidade))}${kv("Compartilhamento",esc(x.Compartilhamento))}${kv("Carga técnica relativa",f2(x.CargaTecnica))}${kv("Área interna / externa",f0(x.AreaInterna)+" / "+f0(x.AreaExterna)+" m²")}${kv("Versão da regra",esc(x.VersaoRegra))}${kv("Valor referencial total",brl(vv.total))}${kv("Equipe equivalente",f2(vv.eq)+" postos + "+f2(vv.enc)+" enc.")}${kv("Horas de serviço por mês",f0(vv.hm))}${kv("Dias de serviço",vv.dias?vv.dias+" por semana":"—")}</div>${valTable(vv)}`:`<p class="note">Rascunho sem indicadores. Conclua o preenchimento para calcular.</p>`}
+  ${x.Status==="Devolvido"&&x.MotivoDevolucao?`<div class="banner">Devolvido: ${esc(x.MotivoDevolucao)}</div>`:""}
+  ${x.Observacoes?`<p class="note">Observações: ${esc(x.Observacoes)}</p>`:""}
+  <h3 style="font-size:14px;margin-top:14px">Histórico</h3><ul class="hist">${(x.Hist||[]).slice().reverse().map(h=>`<li><b>${esc(sl(h.de))} → ${esc(sl(h.para))}</b> · ${esc(who(h.por))} · ${fdt(h.em)}${h.motivo?"<br>"+esc(h.motivo):""}</li>`).join("")||"<li>Sem eventos.</li>"}</ul>
+  ${canV||canH?`<label class="f" style="margin-top:14px">Motivo (obrigatório para devolver)<textarea id="motivo" rows="2"></textarea></label>`:""}
+  <div class="bar" style="margin:16px 0 0">${canE?`<button class="btn" data-act="edit" data-id="${esc(x.ID)}">Editar</button><button class="btn" data-act="dup" data-id="${esc(x.ID)}">Duplicar</button>`:""}${canV?`<button class="btn pri" data-act="validar" data-id="${esc(x.ID)}">Aprovar</button><button class="btn crit" data-act="devolver" data-id="${esc(x.ID)}">Devolver</button>`:""}${canH?`<button class="btn pri" data-act="homologar" data-id="${esc(x.ID)}">Validar (final)</button><button class="btn crit" data-act="devolver" data-id="${esc(x.ID)}">Devolver ao gestor</button>`:""}${canE&&x.Status==="Rascunho"?`<button class="btn crit" data-act="excluir" data-id="${esc(x.ID)}">Excluir rascunho</button>`:""}<span class="sp"></span><button class="btn" data-act="fechar">Fechar</button></div>
+  ${!canV&&x.Status==="Em validação"?`<p class="note">Aprovar e devolver são ações do Gerente da respectiva Gerência.</p>`:""}${!canH&&x.Status==="Validado"?`<p class="note">A validação final é ação do Validador final.</p>`:""}`;
+  $("#dlg").showModal();
+}
+async function transition(id,para,motivo){
+  const x=S.recs.find(r=>r.ID===id);if(!x)return;
+  const okG=canApprove(x)&&(para==="Validado"||para==="Devolvido"),okH=canHomolog(x)&&(para==="Homologado"||para==="Devolvido");
+  if(!okG&&!okH){toast(x.Status==="Validado"?"Ação restrita ao Validador final.":"Ação restrita ao Gerente da Gerência.");return}
+  if(para==="Devolvido"&&!motivo.trim()){toast("Informe o motivo da devolução.");return}
+  const d={...x,Status:para,MotivoDevolucao:para==="Devolvido"?motivo.trim():null,AtualizadoEm:new Date().toISOString(),Hist:[...(x.Hist||[]),{de:x.Status,para,por:S.me.id||"anon",em:new Date().toISOString(),motivo:para==="Devolvido"?motivo.trim():""}].slice(-40)};
+  try{await saveRec(d);$("#dlg").close();toast(para==="Validado"?"Estrutura aprovada pela Gerência.":para==="Homologado"?"Estrutura com validação final.":"Estrutura devolvida ao gestor.");render()}catch(e){toast("Não foi possível gravar: "+(e.message||e.code))}
+}
+
+/* ============ Formulário ============ */
+function blankRec(){const r={};TXT.forEach(k=>r[k]="");NUM.forEach(k=>r[k]=null);ITENS.forEach(k=>r[k]=null);FLAGS.forEach(k=>r[k]=0);[...DEP_SAN,...DEP_HOSP].forEach(k=>{if(!FLAGS.includes(k))r[k]=0});r.Sazonalidade=null;r.Reposicao=0;r.Residuos=null;r.Gerencia="";r.Tipo="";r.UCCadastro="Notion";return r}
+function fNum(k,unit,opts={}){return `<label class="f" data-w="${k}"><span>${LBL[k]}${unit?` <small>(${unit})</small>`:""}</span><input type="number" inputmode="decimal" id="f_${k}" data-k="${k}" min="0" step="${opts.step||"any"}" ${opts.max!=null?`max="${opts.max}"`:""}></label>`}
+function fSel(k,opts){return `<label class="f" data-w="${k}">${LBL[k]}<select id="f_${k}" data-k="${k}" data-sel><option value="">Selecione</option>${opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join("")}</select></label>`}
+function fFlag(k){return `<div class="f" data-w="${k}"><span style="font-size:12.5px;font-weight:500;color:var(--ink2)">${LBL[k]}</span><div class="seg" role="group" aria-label="${LBL[k]}"><button type="button" data-flag="${k}" data-v="1" id="f_${k}_1">Sim</button><button type="button" data-flag="${k}" data-v="0" id="f_${k}_0">Não</button></div></div>`}
+function fTxt(k,ph,list){return `<label class="f" data-w="${k}">${LBL[k]}<input type="text" id="f_${k}" data-k="${k}" ${list?`list="${list}"`:""} placeholder="${ph||""}" autocomplete="off"></label>`}
+function vForm(m){
+  if(!S.form){S.form=newForm();S.edit=null}
+  const isE=!!S.edit, st=S.edit?S.edit.Status:"Rascunho";
+  m.innerHTML=`<div class="bar"><h2 style="font-size:20px">${isE?"Editar estrutura":"Nova estrutura"}</h2>${isE?stPill(st):""}<span class="sp"></span><button class="btn" data-act="cancelar">${isE?"Cancelar":"Limpar"}</button></div>
+  <div class="formgrid"><div>
+   <section class="sec"><h2>Quem está preenchendo</h2><p class="sub">Nome de quem levantou as informações. Fica registrado no diagnóstico e aparece para o Gerente na aprovação. Seu envio não é visível para outros preenchedores.</p><div class="fields">${fTxt("Responsavel","Nome completo")}${fTxt("Contato","E-mail ou telefone (opcional)")}</div></section>
+   <section class="sec"><h2>Onde fica</h2><p class="sub">Escolha a UC ou área protegida na relação abaixo. Gerência e categoria vêm do cadastro do Notion (${UCS.length} áreas, sincronizado em ${SYNC}).</p><div id="ucBox" class="ucbox"></div></section>
+   <section class="sec"><h2>Estrutura e área</h2><p class="sub">Uma linha por estrutura. A área sanitária já faz parte da área interna.</p>
+     <div class="f" style="margin-bottom:12px"><span style="font-size:12.5px;font-weight:500;color:var(--ink2)">Uso principal</span><div class="chips" role="group" aria-label="Uso principal">${TIPOS.map(t=>`<button type="button" data-tipo="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join("")}</div></div>
+     <div class="fields">${fTxt("Estrutura","Nome da estrutura")}${fNum("AreaInterna","m²")}${fNum("AreaExterna","m²")}</div>
+     <details class="det" ${ITENS.some(k=>S.form[k]!=null)?"open":""}><summary>Detalhar áreas por tipo de serviço (opcional)</summary>
+      <p class="sub">Serve para aplicar o valor certo a cada tipo de piso. Sem detalhamento, a área interna é valorada como piso frio (ou almoxarifado, se o uso for galpão/oficina) e a externa como pátio, conforme a frequência calculada. O sanitário de grande circulação é separado automaticamente.</p>
+      <h3 style="font-size:13px;margin:6px 0">Áreas internas (m²)</h3><div class="fields">${fNum("A_acarp","m²")}${fNum("A_lab","m²")}${fNum("A_almox","m²")}${fNum("A_ofic","m²")}${fNum("A_saguao","m²")}</div>
+      <h3 style="font-size:13px;margin:12px 0 6px">Áreas externas (m²)</h3><div class="fields">${fNum("A_pav","m²")}${fNum("A_varr","m²")}${fNum("A_patAlta","m²")}${fNum("A_patMedia","m²")}${fNum("A_patBaixa","m²")}</div></details></section>
+   <section class="sec"><h2>Uso</h2><p class="sub">Rotina semanal, visitação e sazonalidade.</p><div class="fields">
+     ${fNum("Dias","0 a 7",{max:7})}${fNum("Horas","0 a 24",{max:24})}${fNum("Pessoas","nº")}${fNum("Visitantes","por dia")}${fNum("Pico","por dia")}${fSel("Sazonalidade",[[0,"0 · Nenhuma"],[1,"1 · Eventual"],[2,"2 · Intensa"]])}</div></section>
+   <section class="sec"><h2>Sanitários</h2><p class="sub">Informe os equipamentos somente se existirem.</p><div class="fields">${fFlag("Sanitario")}</div>
+     <div id="sec_san" class="fields" style="margin-top:12px">${fFlag("Publico")}${fNum("Vasos","nº")}${fNum("Mictorios","nº")}${fNum("Lavatorios","nº")}${fNum("Chuveiros","nº")}${fNum("AreaSanitaria","m², já na área interna")}${fNum("HorasSan","0 a 24",{max:24})}${fSel("Reposicao",[[0,"0 · Rara"],[1,"1 · Às vezes"],[2,"2 · Frequente"]])}</div></section>
+   <section class="sec"><h2>Hospedagem</h2><p class="sub">Leitos e quartos precisam ser positivos quando houver hospedaria.</p><div class="fields">${fFlag("Hospedaria")}</div>
+     <div id="sec_hosp" class="fields" style="margin-top:12px">${fNum("Leitos","nº")}${fNum("Quartos","nº")}${fNum("Hospedes","no mês típico")}${fNum("Trocas","entradas no mês")}${fFlag("Lavanderia")}</div></section>
+   <section class="sec"><h2>Exterior e particularidades</h2><div class="fields">${fSel("Residuos",[[0,"0 · Poucos"],[1,"1 · Fins de semana"],[2,"2 · Diários"],[3,"3 · Pico intenso"]])}${fNum("Lixeiras","nº")}
+     <label class="f wide" data-w="Observacoes">Observações e situações não previstas<textarea id="f_Observacoes" data-k="Observacoes" rows="3"></textarea></label></div></section>
+  </div>
+  <aside class="side"><section class="panel"><h2>Conferência</h2><div id="chk"></div></section>
+   <section class="panel"><h2>Indicadores</h2><div id="ind"></div></section>
+   <div class="bar" style="margin:0"><button class="btn" id="bRasc" data-act="rascunho" ${isE&&st!=="Rascunho"?"hidden":""}>Salvar rascunho</button><button class="btn pri" id="bConc" data-act="concluir">${isE&&st!=="Rascunho"?"Salvar e reenviar":"Enviar"}</button>${isE?"":`<button class="btn pri" id="bMais" data-act="concluirmais">Enviar e cadastrar outra</button>`}</div></aside></div>`;
+  renderUcBox();refreshInputs();refreshCheck();
+}
+function refreshInputs(){
+  const r=S.form;
+  document.querySelectorAll("#main [data-k]").forEach(el=>{const v=r[el.dataset.k];el.value=v==null?"":v});
+  FLAGS.forEach(k=>{document.querySelectorAll(`[data-flag="${k}"]`).forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.v)===r[k])))});
+  document.querySelectorAll("[data-tipo]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tipo===r.Tipo)));
+  $("#sec_san")&&($("#sec_san").hidden=r.Sanitario!==1);$("#sec_hosp")&&($("#sec_hosp").hidden=r.Hospedaria!==1);
+}
+function refreshCheck(){
+  const r=S.form,c=check(r,S.recs,!!S.edit);
+  document.querySelectorAll("#main [data-w]").forEach(l=>l.classList.toggle("bad",false));
+  const bl=c.blank.map(k=>LBL[k]);
+  let h="";
+  if(bl.length)h+=`<p class="note" style="margin:0 0 4px"><b>${bl.length}</b> campo(s) obrigatório(s) pendente(s)</p><ul class="chk">${bl.slice(0,6).map(t=>`<li class="w">${esc(t)}</li>`).join("")}${bl.length>6?`<li class="w">e mais ${bl.length-6}</li>`:""}</ul>`;
+  if(c.err.length)h+=`<p class="note" style="margin:8px 0 4px"><b>${c.err.length}</b> inconsistência(s)</p><ul class="chk">${c.err.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`;
+  if(!bl.length&&!c.err.length)h=`<p style="margin:0;color:var(--ok);font-weight:500">Pronto para concluir.</p>`;
+  $("#chk").innerHTML=h;
+  const ok=!bl.length&&!c.err.length;
+  if(ok){const x=calc(r,S.params),vv=valorar({...r,...x},x,S.val);$("#ind").innerHTML=`<p class="note" style="margin:0">Prévia com a regra ${esc(S.params.VersaoRegra)}. Só é gravada ao concluir.</p><dl class="ind"><dt>IUP</dt><dd>${x.IUP} · ${x.FaixaIUP}</dd><dt>IPS</dt><dd>${x.IPS} · ${x.ClasseSan}</dd><dt>IHOS</dt><dd>${f2(x.IHOS)}</dd><dt>Frequência externa</dt><dd>${x.FrequenciaExterna}</dd><dt>Modalidade</dt><dd>${x.Modalidade}</dd><dt>Compartilhamento</dt><dd>${x.Compartilhamento}</dd><dt>Carga relativa</dt><dd>${f2(x.CargaTecnica)}</dd><dt>Valor referencial</dt><dd>${vv.semUso?"sem uso atual":brl(vv.total)+"/mês"}</dd></dl>`}
+  else $("#ind").innerHTML=`<p class="note" style="margin:0">Os indicadores aparecem quando o registro estiver completo e consistente.</p>`;
+  const b=$("#bConc");if(b)b.disabled=!ok||S.saving;const b2=$("#bMais");if(b2)b2.disabled=!ok||S.saving;
+}
+function setFlag(k,v){
+  const r=S.form;r[k]=v;
+  if(k==="Sanitario"){DEP_SAN.forEach(d=>r[d]=v===0?0:(FLAGS.includes(d)?0:null))}
+  if(k==="Hospedaria"){DEP_HOSP.forEach(d=>r[d]=v===0?0:(FLAGS.includes(d)?0:null))}
+  if(k==="Sanitario"&&v===1)r.Reposicao=null;
+  refreshInputs();refreshCheck();
+}
+function buildDoc(concl){
+  const r=S.form,old=S.edit,now=new Date().toISOString(),me=S.me.id||"anon";
+  const doc={};TXT.forEach(k=>doc[k]=String(r[k]??"").trim());NUM.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));ITENS.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));
+  RES.forEach(k=>doc[k]=null);doc.ValorMensal=null;doc.ValorJSON=null;doc.VersaoRegra=null;doc.ParamsJSON=null;doc.MotivoDevolucao=null;
+  doc.Exemplo=!!old?.Exemplo;doc.CriadoPor=old?.CriadoPor||me;doc.AtualizadoEm=now;
+  let rev=old?.Revisao||1,para="Rascunho";
+  if(concl){Object.assign(doc,calc(r,S.params));{const vv=valorar(doc,doc,S.val);doc.ValorMensal=vv.total;doc.ValorJSON=JSON.stringify(vv)}doc.VersaoRegra=S.params.VersaoRegra;doc.ParamsJSON=JSON.stringify(S.params);para="Em validação";if(old?.Status==="Validado"||old?.Status==="Homologado")rev++}
+  doc.Revisao=rev;doc.Status=para;
+  const h=[...(old?.Hist||[])];
+  if(!old||old.Status!==para||concl)h.push({de:old?old.Status:"—",para,por:me,em:now,motivo:old&&(old.Status==="Validado"||old.Status==="Homologado")?"Nova revisão "+rev:""});
+  doc.Hist=h.slice(-40);
+  return doc;
+}
+async function submit(concl,again){
+  const r=S.form,c=check(r,S.recs,!!S.edit);
+  if(perfil()==="gestor"&&!tester()&&r.UC&&!myUCs().has(r.UC)){toast("A UC selecionada não está atribuída ao seu perfil.");return}
+  if(concl&&(c.blank.length||c.err.length)){toast("Corrija as pendências da conferência.");return}
+  if(!concl&&(!String(r.UC).trim()||!String(r.Estrutura).trim())){toast("Informe ao menos a UC e o nome da estrutura para salvar o rascunho.");return}
+  if(!concl&&S.recs.some(x=>x.ID!==r.ID&&x.UC===r.UC&&norm(x.Estrutura)===norm(r.Estrutura))){toast("Já existe uma estrutura com este nome nesta UC.");return}
+  S.saving=true;refreshCheck();
+  try{if(!String(r.ID||"").trim())r.ID=await freshId(r);const doc=buildDoc(concl);await saveRec(doc);const keep={UC:r.UC,Gerencia:r.Gerencia,Categoria:r.Categoria,UCTipo:r.UCTipo,UCCadastro:r.UCCadastro,Responsavel:r.Responsavel,Contato:r.Contato};
+    S.edit=null;S.saving=false;S._keep=keep;
+    if(again){S.form=newForm();Object.assign(S.form,keep);S.ucManual=false;S.view="form";render();window.scrollTo({top:0});toast("Envio registrado (protocolo "+doc.ID+"). Cadastre a próxima estrutura de "+keep.UC+".")}
+    else if(concl){S.form=null;S.view=perfil()==="gestor"?"minha":"reg";render();confirmDlg(doc)}
+    else{toast("Rascunho salvo.");S.form=null;S.view=perfil()==="gestor"?"minha":"reg";render()}}
+  catch(e){S.saving=false;refreshCheck();toast("Não foi possível gravar: "+(e.message||e.code||"erro"))}
+}
+function confirmDlg(d){
+  const priv=perfil()==="gestor"?"Seu envio fica visível apenas para você e para quem analisa os diagnósticos. Outros participantes não têm acesso a ele.":"O envio foi gravado na base compartilhada.";
+  $("#dlgBody").innerHTML=`<div role="status"><h2 style="color:var(--ok)">Envio registrado com sucesso</h2>
+  <p style="margin:8px 0 0">A estrutura <b>${esc(d.Estrutura)}</b> de <b>${esc(d.UC)}</b> foi enviada para aprovação do Gerente da Gerência ${esc(d.Gerencia)}.</p>
+  <div class="kv"><div><span>Protocolo</span><b>${esc(d.ID)}</b></div><div><span>Enviado em</span><b>${fdt(d.AtualizadoEm)}</b></div><div><span>Responsável</span><b>${esc(d.Responsavel||"—")}</b></div><div><span>Situação</span><b>${esc(sl(d.Status))}</b></div></div>
+  <p class="note" style="margin-top:0">${priv} Guarde o protocolo para consulta. Se a estrutura for devolvida, o motivo aparece em "Minhas UCs".</p>
+  ${canFill()?`<div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="outra">Cadastrar outra estrutura</button><span class="sp"></span><button class="btn" data-act="fechar">Fechar</button></div>`:`<div class="bar" style="margin:16px 0 0"><span class="sp"></span><button class="btn pri" data-act="fechar">Fechar</button></div>`}</div>`;
+  $("#dlg").showModal();
+}
+
+/* ============ Seleção de UC e identificação automática ============ */
+function applyUc(r,name){
+  const i=UCS.findIndex(u=>u[0]===name);if(i<0)return false;
+  r.UC=name;r.Gerencia=UCS[i][2];r.Categoria=CATS[UCS[i][1]];r.UCTipo=CAT_TIPO[UCS[i][1]];r.UCCadastro="Notion";return true;
+}
+function newForm(){const r=blankRec();r.Responsavel=S.me.name||"";
+  try{const u=localStorage.getItem("lastUC");if(u&&myUCs().has(u))applyUc(r,u)}catch{}
+  if(!r.UC&&perfil()==="gestor"&&myUCs().size===1)applyUc(r,[...myUCs()][0]);
+  S.ucQ="";S.ucG="";S.ucManual=false;S.autoName="";return r}
+function ucPool(){const s=myUCs();return UCS.map((u,i)=>[u,i]).filter(([u])=>s.has(u[0]))}
+function ucMatches(q){
+  const t=norm(q).split(/\s+/).filter(Boolean);
+  return ucPool().filter(([u])=>{if(S.ucG&&u[2]!==S.ucG)return false;const s=norm(u[0]+" "+CATS[u[1]]+" "+u[2]);return t.every(x=>s.includes(x))});
+}
+function renderUcList(){
+  const l=$("#ucList");if(!l)return;const m=ucMatches(S.ucQ),tot=ucPool().length;
+  l.innerHTML=m.length?m.map(([u,i])=>`<button type="button" data-uc="${i}"><span>${esc(u[0])}</span><small>${esc(u[2])} · ${esc(CATS[u[1]])}</small></button>`).join(""):`<div class="hint">${tot?"Nenhuma área encontrada com este filtro.":"Nenhuma UC está atribuída ao seu perfil. Solicite a atribuição ao administrador."}</div>`;
+  const c=$("#ucCount");if(c)c.textContent=m.length===tot?`${tot} áreas na relação`:`${m.length} de ${tot} áreas`;
+}
+function renderUcBox(){
+  const b=$("#ucBox");if(!b||!S.form)return;const r=S.form;
+  if(S.ucManual){
+    b.innerHTML=`<div class="fields"><label class="f wide">Nome da UC ou área<input type="text" id="f_UC" data-k="UC" autocomplete="off"></label><label class="f">Gerência<select id="f_Gerencia" data-k="Gerencia" data-sel><option value="">Selecione</option>${GER.map(g=>`<option>${g}</option>`).join("")}</select></label><label class="f">Categoria<select id="f_Categoria" data-k="Categoria" data-sel><option value="">Selecione</option>${CATS.map(c=>`<option>${esc(c)}</option>`).join("")}</select></label></div><button type="button" class="btn sm" data-act="ucvoltar" style="width:max-content">Voltar para a relação</button>`;
+    refreshInputs();return;
+  }
+  if(r.UC){
+    b.innerHTML=`<div class="ucard"><b>${esc(r.UC)}</b>${r.Categoria?`<span class="pill">${esc(r.Categoria)}</span>`:""}${r.UCTipo?`<span class="pill info">${esc(r.UCTipo.replace("Unidade de Conservação de ","UC de "))}</span>`:""}<span class="pill ok">${esc(r.Gerencia||"—")}</span>${r.UCCadastro==="Manual"?'<span class="pill warn">Fora do cadastro</span>':""}<span class="sp"></span><button type="button" class="btn sm" data-act="trocaruc">Trocar</button></div>${(()=>{const ex=S.recs.filter(x=>x.UC===r.UC&&x.ID!==r.ID);return ex.length?`<p class="note" style="margin:8px 0 0">Já cadastradas nesta UC (${ex.length}):</p><div class="chips sm" style="margin-top:6px">${ex.map(x=>`<span class="pill ${x.Status==="Validado"?"ok":x.Status==="Devolvido"?"warn":x.Status==="Em validação"?"info":""}">${esc(x.Estrutura)} · ${esc(sl(x.Status))}</span>`).join("")}</div>`:`<p class="note" style="margin:8px 0 0">Nenhuma estrutura cadastrada ainda nesta UC.</p>`})()}`;
+    return;
+  }
+  const gs=[...new Set(ucPool().map(([u])=>u[2]))].sort();
+  b.innerHTML=`<label class="f">Filtrar a relação<input type="text" id="ucQ" placeholder="Digite parte do nome ou a sigla (ex.: PE Cantareira)" autocomplete="off" value="${esc(S.ucQ)}"></label>
+  ${gs.length>1?`<div class="chips sm" role="group" aria-label="Gerência"><button type="button" data-ucg="" aria-pressed="${!S.ucG}">Todas</button>${gs.map(g=>`<button type="button" data-ucg="${g}" aria-pressed="${S.ucG===g}">${g}</button>`).join("")}</div>`:""}
+  <div class="note" id="ucCount" style="margin:0"></div><div class="ucl" id="ucList" role="listbox"></div>
+  ${perfil()==="admin"?`<button type="button" class="btn sm" data-act="ucmanual" style="width:max-content">Área fora da relação: cadastrar manualmente</button>`:`<p class="note" style="margin:0">Área fora da relação? Solicite ao administrador a inclusão no cadastro.</p>`}`;
+  renderUcList();
+}
+function pickUc(i){
+  const r=S.form;const auto=isAutoName(r,r.Tipo);applyUc(r,UCS[i][0]);if(auto&&r.Tipo)r.Estrutura=uniqueName(r,r.Tipo);try{localStorage.setItem("lastUC",UCS[i][0])}catch{}
+  renderUcBox();refreshCheck();
+}
+const isAutoName=(r,tipo)=>{const n=String(r.Estrutura||"").trim();return !n||(!!tipo&&(n===tipo||new RegExp("^"+tipo.replace(/[.*+?^${}()|[\]\\\/]/g,"\\$&")+" \\d+$").test(n)))};
+function uniqueName(r,base){
+  const taken=n=>S.recs.some(x=>x.UC===r.UC&&x.ID!==r.ID&&norm(x.Estrutura)===norm(n));
+  if(!r.UC||!taken(base))return base;
+  for(let i=2;i<100;i++){if(!taken(base+" "+i))return base+" "+i}
+  return base;
+}
+function pickTipo(t){
+  const r=S.form;const auto=isAutoName(r,r.Tipo);r.Tipo=t;
+  if(auto)r.Estrutura=uniqueName(r,t);
+  refreshInputs();refreshCheck();
+}
+async function freshId(r){
+  const base=norm(r.UC).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").toUpperCase().slice(0,30)||"UC";
+  /* sufixo do autor: evita colisão de IDs entre pessoas que não enxergam os envios umas das outras */
+  let h=0;for(const c of String(S.me.id||"x"))h=(h*31+c.charCodeAt(0))>>>0;
+  const sfx=h.toString(36).toUpperCase().slice(-3).padStart(3,"0");
+  for(let n=1;n<500;n++){
+    const id=base+"-"+String(n).padStart(2,"0")+"-"+sfx;
+    if(S.recs.some(x=>x.ID===id))continue;
+    return id;
+  }
+  return base+"-"+Date.now().toString(36).toUpperCase();
+}
+
+
+/* ============ Acesso: solicitação (qualquer usuário) e gestão (administrador) ============ */
+function toggle(set,k,on){const v=on===undefined?!set.has(k):on;v?set.add(k):set.delete(k)}
+function diag(t,extra){return `<div class="panel" style="max-width:720px"><h2>${t}</h2>${extra}</div>`}
+function msgAdm(){return "Solicito acesso ao sistema Limpeza das UCs. Nome: "+(S.me.name||"[informar]")+". Perfil desejado: [Gestor / Gerente / Validador final / Usuário final]. UC ou Gerência: [informar]."}
+function vSolic(){
+  const how=`<p class="note" style="margin-top:0">Para usar o sistema, a conta precisa pertencer à organização do proprietário da página e ter a permissão <b>Pode interagir</b> (ou superior) no menu Compartilhar. Quem só visualiza, ou abre o link por fora da organização, não consegue gravar nem receber perfil.</p>`;
+  if(!S.db)return diag("Base de dados indisponível para a sua conta",`<p class="sub">O sistema depende da base compartilhada, que não foi liberada para esta conta. Isso ocorre quando a conta está fora da organização do proprietário ou não está autenticada.</p>${how}<p class="note">Encaminhe ao proprietário da página o e-mail da conta que você está usando, para que ele a inclua na organização e conceda a permissão.</p>`);
+  if(!S.me.id)return diag("Conta não identificada",`<p class="sub">A plataforma não identificou esta conta como membro da organização proprietária. Sem identificação não é possível atribuir perfil nem registrar pedido.</p>${how}<p class="note">Solicite ao proprietário o convite à organização. Depois, abra o link novamente.</p>`);
+  if(S.can===false)return diag("Acesso somente para leitura",`<p class="sub">Sua conta foi identificada, mas o compartilhamento atual só permite visualizar. Por isso o pedido de perfil não pode ser gravado por aqui.</p>${how}
+   <p class="note">Enquanto isso, envie a mensagem abaixo ao administrador. Ele localiza o seu nome em <b>Acessos &gt; Adicionar pessoa</b> e atribui o perfil.</p>
+   <textarea id="rqMsg" rows="3" readonly>${esc(msgAdm())}</textarea><div class="bar" style="margin:10px 0 0"><button class="btn" data-act="copiarmsg">Copiar mensagem</button></div>`);
+  if(S.pedido)return `<div class="panel"><h2>Solicitação enviada</h2><p class="sub">Perfil solicitado: <b>${esc(PERFIS[S.pedido.Perfil]||S.pedido.Perfil)}</b>. O administrador irá atribuir o acesso. Esta tela é atualizada automaticamente.</p>${S.pedido.Obs?`<p class="note">Informado: ${esc(S.pedido.Obs)}</p>`:""}</div>`;
+  return `<div class="panel" style="max-width:640px"><h2>Solicitar acesso</h2><p class="sub">Você ainda não tem perfil neste sistema. Informe o perfil desejado e a UC ou Gerência a que se refere. O administrador fará a atribuição.</p>
+  <div class="fields"><label class="f wide">Perfil<select id="rqPerfil"><option value="gestor">Gestor: preencho o diagnóstico da minha UC</option><option value="gerente">Gerente: aprovo os diagnósticos da minha Gerência</option><option value="validador">Validador final: faço a validação final dos diagnósticos aprovados pelos Gerentes</option><option value="final">Usuário final: consulto e exporto os dados validados</option></select></label>
+  <label class="f wide">UC(s) ou Gerência<textarea id="rqObs" rows="2" placeholder="Ex.: PE Cantareira e PE Alberto Löfgren"></textarea></label></div>
+  <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="solicitar">Solicitar acesso</button></div></div>`;
+}
+async function solicitar(){
+  try{await S.db.doc("pedidos/"+slug(S.me.id)).set({Uid:S.me.id,Perfil:$("#rqPerfil").value,Obs:$("#rqObs").value.trim().slice(0,400),Em:new Date().toISOString()});toast("Solicitação enviada.")}
+  catch(e){toast(e&&e.code==="invalid_argument"?"Sua permissão é somente de leitura. Peça ao proprietário a permissão Pode interagir.":"Não foi possível enviar: "+(e.message||e.code))}
+}
+function scopeTxt(a){
+  if(a.Perfil==="gestor"){const n=(a.UCs||[]).length;return n+" UC(s): "+(a.UCs||[]).slice(0,3).join(", ")+(n>3?"…":"")}
+  if(a.Perfil==="gerente")return "Gerência(s): "+(a.Gerencias||[]).join(", ");
+  return a.Perfil==="validador"?"Validação final, todas as UCs":"Diagnósticos com validação final, todas as UCs";
+}
+function vAcc(){
+  if(!S.isAdmin)return vSolic();
+  if(!S.db)return `<div class="panel empty">A gestão de acessos exige a base compartilhada.</div>`;
+  const pend=S.pedidos.filter(p=>!S.accAll.some(a=>a.Uid===p.Uid));
+  return `<div class="grid g2" style="margin-top:0">
+  <section class="panel"><h2>Solicitações pendentes</h2><p class="sub">Pessoas que abriram o sistema sem perfil.</p>
+   ${pend.length?`<ul class="lst">${pend.map(p=>`<li><div><b>${esc(who(p.Uid))}</b><div class="note" style="margin:0">${esc(PERFIS[p.Perfil]||p.Perfil)}${p.Obs?" · "+esc(p.Obs):""}</div></div><span class="sp"></span><button class="btn pri sm" data-act="asg" data-uid="${esc(p.Uid)}">Atribuir</button><button class="btn sm" data-act="recusar" data-uid="${esc(p.Uid)}">Recusar</button></li>`).join("")}</ul>`:`<div class="empty">Nenhuma solicitação pendente.</div>`}
+   <h3 style="font-size:14px;margin:18px 0 6px">Adicionar pessoa</h3>
+   <input type="text" id="pSearch" placeholder="Buscar por nome" autocomplete="off"><ul class="lst" id="psRes" style="margin-top:8px"></ul></section>
+  <section class="panel"><h2>Pessoas com acesso</h2><p class="sub">Gestor por UC, Gerente por Gerência; Validador final e Usuário final sem escopo.</p>
+   ${S.accAll.length?`<ul class="lst">${S.accAll.map(a=>`<li><div><b>${esc(who(a.Uid))}</b> <span class="pill ${a.Perfil==="gestor"?"ok":a.Perfil==="gerente"?"info":""}">${esc(PERFIS[a.Perfil]||a.Perfil)}</span><div class="note" style="margin:0">${esc(scopeTxt(a))}</div></div><span class="sp"></span><button class="btn sm" data-act="asg" data-uid="${esc(a.Uid)}">Editar</button><button class="btn crit sm" data-act="remover" data-uid="${esc(a.Uid)}">Remover</button></li>`).join("")}</ul>`:`<div class="empty">Ninguém com perfil atribuído. O administrador enxerga tudo por padrão.</div>`}</section></div>
+  <p class="note">Use "Ver como" no topo da página para conferir o que cada perfil enxerga.</p>
+  <section class="panel" style="margin-top:16px"><h2>Como liberar o acesso</h2><ol class="note" style="margin:0;padding-left:18px;display:grid;gap:4px"><li>A pessoa precisa ser membro da sua organização no Claude. Quem está fora dela não é identificado e não aparece na busca.</li><li>No menu Compartilhar da página, conceda <b>Pode interagir</b> (não apenas visualizar). Quem só visualiza não grava diagnósticos nem pedidos.</li><li>Envie o link. A pessoa abre, solicita o perfil, e o pedido aparece em "Solicitações pendentes". Se preferir, busque-a em "Adicionar pessoa" e atribua o perfil antes.</li></ol></section>`;
+}
+let psT;
+function psSearch(q){
+  clearTimeout(psT);
+  psT=setTimeout(async()=>{
+    const box=$("#psRes");if(!box)return;
+    if(!S._user||!q.trim()){box.innerHTML="";return}
+    let rs=[];try{rs=await S._user.search(q.trim())}catch{}
+    box.innerHTML=rs.length?rs.slice(0,8).map(p=>`<li><b>${esc(p.name||"Usuário")}</b><span class="sp"></span><button class="btn sm" data-psel="${esc(p.id)}">Atribuir</button></li>`).join(""):`<li class="note">Nenhuma pessoa encontrada.</li>`;
+    rs.forEach(p=>{if(p.name)S.names[p.id]=p.name});
+  },250);
+}
+function openAsg(uid){
+  const cur=S.accAll.find(a=>a.Uid===uid),ped=S.pedidos.find(p=>p.Uid===uid);
+  S.asg={uid,perfil:cur?.Perfil||ped?.Perfil||"gestor",ucs:new Set(cur?.UCs||[]),gers:new Set(cur?.Gerencias||[]),q:""};
+  names([uid]).then(()=>{if(S.asg)renderAsg()});
+  renderAsg();if(!$("#dlg").open)$("#dlg").showModal();
+}
+function renderAsg(){
+  const a=S.asg;if(!a)return;
+  const ped=S.pedidos.find(p=>p.Uid===a.uid);
+  $("#dlgBody").innerHTML=`<h2>Atribuir perfil</h2><p class="note" style="margin:2px 0 12px"><b>${esc(who(a.uid))}</b>${ped&&ped.Obs?" · pediu: "+esc(ped.Obs):""}</p>
+  <div class="chips" role="group" aria-label="Perfil">${["gestor","gerente","validador","final"].map(k=>`<button type="button" data-asgp="${k}" aria-pressed="${a.perfil===k}">${PERFIS[k]}</button>`).join("")}</div>
+  <div id="asgScope" style="margin-top:14px">${a.perfil==="gestor"?`<p class="note" style="margin:0 0 8px">UCs sob responsabilidade do Gestor. Só elas aparecerão na lista de preenchimento.</p>
+   <div class="chips sm" style="margin-bottom:8px">${GER.map(g=>`<button type="button" data-asgg="${g}">+ todas da ${g}</button>`).join("")}<button type="button" data-asgclear>Limpar</button></div>
+   <input type="text" id="asgQ" placeholder="Filtrar UCs" autocomplete="off" value="${esc(a.q)}"><div class="note" id="asgCount" style="margin:6px 0">${a.ucs.size} selecionada(s)</div><div class="ucl" id="asgList"></div>`
+   :a.perfil==="gerente"?`<p class="note" style="margin:0 0 8px">Gerências cujos diagnósticos o Gerente aprova.</p><div class="checks">${GER.map(g=>`<label><input type="checkbox" data-asgger="${g}" ${a.gers.has(g)?"checked":""}> ${g} <small class="note" style="margin:0">(${UCS.filter(u=>u[2]===g).length} áreas)</small></label>`).join("")}</div>`
+   :a.perfil==="validador"?`<p class="note" style="margin:0">Sem escopo: o Validador final vê os diagnósticos aprovados pelas Gerências, de todas as UCs, e faz a validação final.</p>`:`<p class="note" style="margin:0">Sem escopo: o Usuário final vê o painel e exporta os diagnósticos com validação final, de todas as UCs.</p>`}</div>
+  <div class="bar" style="margin:18px 0 0"><button class="btn pri" data-act="asgsalvar">Salvar</button><span class="sp"></span><button class="btn" data-act="fechar">Cancelar</button></div>`;
+  renderAsgList();
+}
+function renderAsgList(){
+  const a=S.asg,l=$("#asgList");if(!a||!l){const c=$("#asgCount");if(c&&a)c.textContent=a.ucs.size+" selecionada(s)";return}
+  const t=norm(a.q).split(/\s+/).filter(Boolean);
+  l.innerHTML=UCS.filter(u=>t.every(x=>norm(u[0]+" "+u[2]).includes(x))).map(u=>`<label><input type="checkbox" data-asguc="${esc(u[0])}" ${a.ucs.has(u[0])?"checked":""}><span>${esc(u[0])}</span><small style="margin-left:auto;color:var(--ink2)">${u[2]}</small></label>`).join("")||`<div class="hint">Nenhuma UC encontrada.</div>`;
+  const c=$("#asgCount");if(c)c.textContent=a.ucs.size+" selecionada(s)";
+}
+async function saveAsg(){
+  const a=S.asg;
+  if(a.perfil==="gestor"&&!a.ucs.size){toast("Selecione ao menos uma UC.");return}
+  if(a.perfil==="gerente"&&!a.gers.size){toast("Selecione ao menos uma Gerência.");return}
+  const doc={Uid:a.uid,Perfil:a.perfil,UCs:a.perfil==="gestor"?[...a.ucs]:[],Gerencias:a.perfil==="gerente"?[...a.gers]:[],Por:S.me.id||"admin",Em:new Date().toISOString()};
+  try{await S.db.doc("acessos/"+slug(a.uid)).set(doc);try{await S.db.doc("pedidos/"+slug(a.uid)).delete()}catch{}S.asg=null;$("#dlg").close();toast("Perfil atribuído.")}
+  catch(e){toast("Não foi possível gravar: "+(e.message||e.code))}
+}
+async function removeAcc(uid){try{await S.db.doc("acessos/"+slug(uid)).delete();toast("Acesso removido.")}catch(e){toast("Não foi possível remover.")}}
+async function recusar(uid){try{await S.db.doc("pedidos/"+slug(uid)).delete();toast("Solicitação removida.")}catch(e){toast("Não foi possível remover.")}}
+
+/* ============ Exportação em Excel (Usuário final) ============ */
+const MEAS=[["AreaInterna","Área interna (m²)","sum"],["AreaExterna","Área externa (m²)","sum"],["AreaSanitaria","Área sanitária (m²)","sum"],["Pessoas","Pessoas na equipe","sum"],["Visitantes","Visitantes por dia","sum"],["Pico","Pico de visitantes","sum"],["Vasos","Vasos","sum"],["Mictorios","Mictórios","sum"],["Lavatorios","Lavatórios","sum"],["Chuveiros","Chuveiros","sum"],["Leitos","Leitos","sum"],["Quartos","Quartos","sum"],["Hospedes","Hóspedes no mês","sum"],["Trocas","Trocas no mês","sum"],["Lixeiras","Lixeiras","sum"],["Dias","Dias de uso por semana","avg"],["Horas","Horas de uso por dia","avg"],["IUP","IUP","avg"],["IPS","IPS","avg"],["IHOS","IHOS","avg"],["CargaTecnica","Carga técnica relativa","sum"],["ValorMensal","Valor referencial (R$/mês)","sum"],["Equipe","Equipe equivalente (postos)","sum"],["HorasMes","Horas de serviço por mês","sum"]];
+const CATG=[["FaixaIUP","Faixa do IUP"],["ClasseSan","Classe sanitária"],["Modalidade","Modalidade indicada"],["Compartilhamento","Compartilhamento"],["FrequenciaExterna","Frequência externa"]];
+const MGROUPS=[["Áreas",["AreaInterna","AreaExterna","AreaSanitaria"]],["Uso e equipe",["Pessoas","Visitantes","Pico","Dias","Horas"]],["Sanitários",["Vasos","Mictorios","Lavatorios","Chuveiros"]],["Hospedagem",["Leitos","Quartos","Hospedes","Trocas"]],["Exterior",["Lixeiras"]],["Indicadores",["IUP","IPS","IHOS","CargaTecnica"]],["Valor e equipe estimada (CadTerc)",["ValorMensal","Equipe","HorasMes"]]];
+function expInit(){if(!S.exp)S.exp={lvl:"uc",ger:new Set(),st:new Set(["Homologado"]),meas:new Set(["AreaInterna","AreaExterna","CargaTecnica"]),cats:new Set(),resp:false,items:new Set()}}
+const itemMeas=e=>ITEMS.filter(i=>e.items.has(i[0])).flatMap(i=>[["I:a:"+i[0],"Área · "+i[1]+" (m²)","sum"],["I:v:"+i[0],"R$/mês · "+i[1],"sum"]]);
+function expPreset(k){
+  const e=S.exp;e.items=new Set();
+  if(k==="anexo"){e.lvl="uc";e.meas=new Set(["AreaInterna","AreaExterna","ValorMensal"]);e.items=new Set(ITEMS.map(i=>i[0]));e.cats=new Set()}
+  else if(k==="ger"){e.lvl="ger";e.meas=new Set(["AreaInterna","AreaExterna","CargaTecnica"]);e.cats=new Set()}
+  else if(k==="uc"){e.lvl="uc";e.meas=new Set(["AreaInterna","AreaExterna","Visitantes","IUP","CargaTecnica"]);e.cats=new Set()}
+  else{e.lvl="est";e.meas=new Set(MEAS.map(m=>m[0]));e.cats=new Set(CATG.map(c=>c[0]))}
+  vExpRefresh();
+}
+function expRows(){
+  const e=S.exp,fin=perfil()==="final";
+  return S.recs.filter(x=>inScope(x)&&(!e.ger.size||e.ger.has(x.Gerencia))&&(fin||!e.st.size||e.st.has(x.Status))&&!(S.hideDemo&&x.Exemplo));
+}
+const rnd=v=>v==null?null:Math.round(v*10000)/10000;
+function expBuild(){
+  const e=S.exp,rows=expRows(),meas=[...MEAS.filter(m=>e.meas.has(m[0])),...itemMeas(e)],cats=CATG.filter(c=>e.cats.has(c[0]));
+  const val=(x,k)=>{let v;if(k==="ValorMensal")v=valorRec(x)?.total;else if(k==="Equipe")v=valorRec(x)?.eq;else if(k==="HorasMes")v=valorRec(x)?.hm;else if(k.startsWith("I:")){const[,t,ik]=k.split(":"),vv=valorRec(x);v=vv?vv.linhas.filter(l=>l.k===ik).reduce((a,l)=>a+(t==="a"?l.a:l.t),0):undefined}else v=x[k];return typeof v==="number"&&isFinite(v)?v:null};
+  let head,body;
+  if(e.lvl==="est"){
+    head=["Gerência","UC","Categoria","Estrutura","Uso principal",...(e.resp?["Responsável"]:[]),"Situação",...meas.map(m=>m[1]),...cats.map(c=>c[1])];
+    body=rows.slice().sort((a,b)=>(a.Gerencia+a.UC+a.Estrutura).localeCompare(b.Gerencia+b.UC+b.Estrutura)).map(x=>[x.Gerencia,x.UC,x.Categoria||"",x.Estrutura,x.Tipo,...(e.resp?[x.Responsavel||""]:[]),sl(x.Status),...meas.map(m=>rnd(val(x,m[0]))),...cats.map(c=>x[c[0]]??"")]);
+  }else{
+    const key=e.lvl==="uc"?"UC":"Gerencia",gr=new Map();
+    rows.forEach(x=>{const k=x[key]||"(sem valor)";if(!gr.has(k))gr.set(k,[]);gr.get(k).push(x)});
+    const agg=(a,m)=>{const v=a.map(x=>val(x,m[0])).filter(n=>n!=null);if(!v.length)return null;const s=v.reduce((p,q)=>p+q,0);return rnd(m[2]==="avg"?s/v.length:s)};
+    const mh=meas.map(m=>m[1]+(m[2]==="avg"?" — média":" — soma"));
+    if(e.lvl==="uc"){head=["Gerência","UC","Categoria","Nº de estruturas",...mh];
+      body=[...gr].sort((a,b)=>(a[1][0].Gerencia+a[0]).localeCompare(b[1][0].Gerencia+b[0])).map(([k,a])=>[a[0].Gerencia,k,a[0].Categoria||"",a.length,...meas.map(m=>agg(a,m))])}
+    else{head=["Gerência","UCs no cadastro","UCs com diagnóstico","Nº de estruturas",...mh];
+      body=[...gr].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,a])=>[k,UCS.filter(u=>u[2]===k).length,new Set(a.map(x=>x.UC)).size,a.length,...meas.map(m=>agg(a,m))])}
+  }
+  return{head,body};
+}
+function expPreview(){
+  const box=$("#expPrev");if(!box||!S.exp)return;
+  const{head,body}=expBuild(),fmt=v=>v==null||v===""?"":typeof v==="number"?Number(v).toLocaleString("pt-BR",{maximumFractionDigits:2}):esc(v);
+  box.innerHTML=`<p class="note" style="margin:0 0 8px"><b>${f0(body.length)}</b> linha(s) · ${head.length} coluna(s)${body.length>10?" · mostrando as 10 primeiras":""}</p>`+(body.length?`<div class="tw"><table><thead><tr>${head.map((c,i)=>`<th class="${i>=head.length-(head.length)&&false?"n":""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${body.slice(0,10).map(r=>`<tr>${r.map(v=>`<td class="${typeof v==="number"?"n":""}">${fmt(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:`<div class="empty">Nenhum diagnóstico com estes critérios.${perfil()==="final"?" Só entram diagnósticos com validação final.":""}</div>`);
+  const b=[$("#bXlsx"),$("#bECsv")];b.forEach(x=>x&&(x.disabled=!body.length));
+}
+function vExpRefresh(){const m=$("#main");vExp(m)}
+function vExp(m){
+  expInit();const e=S.exp,fin=perfil()==="final",est=e.lvl==="est";
+  m.innerHTML=`<div class="bar"><h2 style="font-size:20px">Exportar para Excel</h2><span class="sp"></span><span class="note" style="margin:0">Atalhos:</span><button class="btn sm" data-epre="ger">Resumo por Gerência</button><button class="btn sm" data-epre="uc">Resumo por UC</button><button class="btn sm" data-epre="est">Tudo por estrutura</button><button class="btn sm" data-epre="anexo">Modelo Anexo II (por UC)</button></div>
+  <div>
+   <section class="sec"><h2>1. Nível da tabela</h2><p class="sub">Cada linha representa:</p><div class="seg" role="group" aria-label="Nível">${[["est","Estrutura"],["uc","UC"],["ger","Gerência"]].map(([k,t])=>`<button type="button" data-elvl="${k}" aria-pressed="${e.lvl===k}">${t}</button>`).join("")}</div>
+    <p class="note" style="margin-bottom:0">${est?"Uma linha por estrutura, com os valores do diagnóstico.":"Valores somados (quantidades) ou em média (dias, horas, IUP, IPS, IHOS) por "+(e.lvl==="uc"?"UC":"Gerência")+"."}</p></section>
+   <section class="sec"><h2>2. Recorte</h2><p class="sub">Sem seleção, entram todas as Gerências.</p><div class="chips sm" role="group" aria-label="Gerências">${gersVis().map(g=>`<button type="button" data-eg="${g}" aria-pressed="${e.ger.has(g)}">${g}</button>`).join("")}</div>
+    ${fin?`<p class="note">Entram apenas diagnósticos com <b>validação final</b>.</p>`:`<div class="chips sm" style="margin-top:10px" role="group" aria-label="Situação">${STATUS.map(s=>`<button type="button" data-est="${s}" aria-pressed="${e.st.has(s)}">${sl(s)}</button>`).join("")}</div><p class="note" style="margin-bottom:0">Rascunhos e devolvidos não têm indicadores calculados.</p>`}</section>
+   <section class="sec"><h2>3. Quantitativos</h2><p class="sub">Marque o que deve virar coluna.</p>
+    ${MGROUPS.map(([t,ks])=>`<h3 style="font-size:13px;margin:12px 0 4px">${t}</h3><div class="checks">${ks.map(k=>{const m=MEAS.find(x=>x[0]===k);return `<label><input type="checkbox" data-em="${k}" ${e.meas.has(k)?"checked":""}> ${m[1]}</label>`}).join("")}</div>`).join("")}
+    <h3 style="font-size:13px;margin:16px 0 4px">Áreas e valores por tipo de serviço <small class="note">(cada item gera duas colunas: m² e R$/mês)</small></h3><div class="checks">${ITEMS.map(i=>`<label><input type="checkbox" data-ei="${i[0]}" ${e.items.has(i[0])?"checked":""}> ${i[1]}</label>`).join("")}</div>
+    <h3 style="font-size:13px;margin:16px 0 4px">Classificações ${est?"":'<small class="note">(somente no nível Estrutura)</small>'}</h3><div class="checks">${CATG.map(([k,t])=>`<label><input type="checkbox" data-ec="${k}" ${e.cats.has(k)?"checked":""} ${est?"":"disabled"}> ${t}</label>`).join("")}${est?`<label><input type="checkbox" id="eResp" ${e.resp?"checked":""}> Responsável pelo preenchimento</label>`:""}</div></section>
+  </div>
+  <section class="panel"><h2>Prévia</h2><div id="expPrev"></div>
+   <div class="bar" style="margin:16px 0 0"><button class="btn pri" id="bXlsx" data-act="xlsx">Baixar Excel (.xlsx)</button><button class="btn" id="bECsv" data-act="ecsv">CSV</button><span class="note" style="margin:0">A planilha inclui uma aba "Critérios" com filtros, data e versão da regra.</span></div></section>`;
+  expPreview();
+}
+async function loadXlsx(){
+  if(window.XLSX)return window.XLSX;
+  await new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+  if(!window.XLSX)throw 0;return window.XLSX;
+}
+const expName=ext=>"limpeza_uc_"+S.exp.lvl+"_"+new Date().toISOString().slice(0,10)+"."+ext;
+async function saveFile(name,data){
+  try{const d=await window.claude.use("downloads");if(!d)throw 0;await d.save({filename:name,data});toast("Arquivo salvo.")}
+  catch(e){if(e&&e.code==="declined")return;toast("Download indisponível nesta visualização.")}
+}
+async function exportXlsx(){
+  const{head,body}=expBuild();if(!body.length)return;
+  let X;try{X=await loadXlsx()}catch{toast("Biblioteca de Excel indisponível. Exportando em CSV.");return exportExpCsv()}
+  const e=S.exp,wb=X.utils.book_new(),ws=X.utils.aoa_to_sheet([head,...body]);
+  ws["!cols"]=head.map((c,i)=>({wch:Math.min(42,Math.max(10,c.length+2,...body.slice(0,60).map(r=>String(r[i]??"").length+2)))}));
+  X.utils.book_append_sheet(wb,ws,"Dados");
+  const crit=[["Limpeza das UCs · exportação"],["Gerado em",new Date().toLocaleString("pt-BR")],["Gerado por",S.me.name||""],["Perfil",PERFIS[perfil()]||""],["Nível",{est:"Estrutura",uc:"UC",ger:"Gerência"}[e.lvl]],["Gerências",e.ger.size?[...e.ger].join(", "):"Todas"],["Situação",perfil()==="final"?"Validado final":(e.st.size?[...e.st].map(sl).join(", "):"Todas")],["Linhas",body.length],["Versão da regra",S.params.VersaoRegra],["Cadastro de UCs","Notion (Áreas protegidas), sincronizado em "+SYNC],["Tabela de valores",S.val.Versao],["Regime de licitação",S.val.Regime==="ampla"?"Participação ampla":"Participação restrita a ME/EPP"],["Fator de reajuste",S.val.Fator],["Observação","Valor referencial = área × valor unitário do CadTerc Vol. 03 por tipo de serviço; é estimativa, não preço contratado. Carga técnica é índice comparativo, não é nº de postos nem preço. Somas e médias ignoram campos vazios."]];
+  X.utils.book_append_sheet(wb,X.utils.aoa_to_sheet(crit),"Critérios");
+  const out=X.write(wb,{bookType:"xlsx",type:"array"});
+  await saveFile(expName("xlsx"),new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+}
+async function exportExpCsv(){
+  const{head,body}=expBuild();
+  const q=v=>{if(v==null)return"";const s=typeof v==="number"?String(v).replace(".",","):String(v);return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  await saveFile(expName("csv"),"﻿"+head.map(q).join(";")+"\n"+body.map(r=>r.map(q).join(";")).join("\n"));
+}
+
+/* ============ Parâmetros ============ */
+function vPar(){
+  const p=S.params,ed=S.isAdmin||!S.db;
+  return `<div class="panel"><h2>Parâmetros da regra</h2><p class="sub">Novos diagnósticos usam estes valores e guardam uma cópia (versão da regra). Registros já concluídos mantêm os valores da época. Os pesos e cortes são propostas de teste, sem aprovação institucional.</p>
+  ${ed?"":`<div class="banner">Somente o perfil administrador altera parâmetros.</div>`}
+  <div class="fields" style="margin-top:8px"><label class="f wide">Versão da regra<input type="text" id="p_VersaoRegra" value="${esc(p.VersaoRegra)}" ${ed?"":"disabled"}></label>
+  ${Object.keys(PLBL).map(k=>`<label class="f">${PLBL[k]}<input type="number" step="any" id="p_${k}" value="${p[k]}" ${ed?"":"disabled"} class="mono"></label>`).join("")}</div>
+  <div id="perr" class="chk" style="margin-top:12px"></div>
+  <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="salvarpar" ${ed?"":"disabled"}>Publicar versão</button><button class="btn" data-act="padrao" ${ed?"":"disabled"}>Restaurar padrão</button></div>
+  <p class="note">Os limites do IPS (30, 300, 100, 800) e os cortes de dias e horas do IUP são fixos na regra e só mudam com nova versão do código.</p></div>`+vVal();
+}
+
+function vVal(){
+  const v=S.val,ed=S.isAdmin||!S.db,inp=(id,val)=>`<input type="number" step="any" min="0" class="mono" id="${id}" value="${val}" ${ed?"":"disabled"}>`;
+  const cols=[["ampla","geral","Ampla · geral"],["ampla","pequena","Ampla · pequenas áreas"],["restrita","geral","Restrita · geral"],["restrita","pequena","Restrita · pequenas áreas"]];
+  return `<div class="panel" style="margin-top:16px"><h2>Tabela de valores referenciais (CadTerc)</h2><p class="sub">Base do cálculo final: valor mensal = área × valor unitário do tipo de serviço. Valores em R$/m²/mês, data-base indicada abaixo. Conforme o item 1.12 do documento, o reajuste segue o Decreto Estadual 48.326/2003: atualize o fator e a data-base quando houver nova versão do CadTerc.</p>
+  ${ed?"":`<div class="banner">Somente o perfil administrador altera a tabela.</div>`}
+  <div class="fields"><label class="f wide">Versão da tabela<input type="text" id="v_Versao" value="${esc(v.Versao)}" ${ed?"":"disabled"}></label>
+  <label class="f">Regime de licitação<select id="v_Regime" ${ed?"":"disabled"}><option value="ampla" ${v.Regime==="ampla"?"selected":""}>Participação ampla (acima de R$ 80 mil/ano)</option><option value="restrita" ${v.Regime==="restrita"?"selected":""}>Participação restrita a ME/EPP</option></select></label>
+  <label class="f">Fator de reajuste (1 = data-base)${inp("v_Fator",v.Fator)}</label>
+  <label class="f">Limite de pequenas áreas (m², construído + externo)${inp("v_LimitePequena",v.LimitePequena)}</label></div>
+  <div class="tw vt" style="margin-top:12px"><table><thead><tr><th>Serviço (R$/m²/mês)</th>${cols.map(c=>`<th class="n">${c[2]}</th>`).join("")}</tr></thead><tbody>
+  ${ITEMS.map(i=>`<tr><td>${i[1]}</td>${cols.map(([rg,tb])=>`<td class="n">${inp(`v_${rg}_${tb}_${i[0]}`,v[rg][tb][i[0]])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+  <div class="tw vt" style="margin-top:12px"><table><thead><tr><th>Parques estaduais (Apêndice 3)</th><th class="n">Ampla</th><th class="n">Restrita</th></tr></thead><tbody>
+  ${[["varr","Varrição de passeios e arruamentos (R$/m²/mês)"],["posto8","Posto sanitário 8 h diárias (R$/posto/mês)"],["posto16","Posto sanitário 16 h diárias (R$/posto/mês)"]].map(([k,t])=>`<tr><td>${t}</td>${["ampla","restrita"].map(rg=>`<td class="n">${inp(`v_${rg}_parque_${k}`,v[rg].parque[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+  <div id="verr" class="chk" style="margin-top:12px"></div>
+  <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="salvarval" ${ed?"":"disabled"}>Publicar tabela</button><button class="btn" data-act="padraoval" ${ed?"":"disabled"}>Restaurar CadTerc jan/2023</button></div></div>`;
+}
+function readVal(){
+  const v={Versao:$("#v_Versao").value.trim()||VDEF.Versao,Regime:$("#v_Regime").value,Fator:Number($("#v_Fator").value),LimitePequena:Number($("#v_LimitePequena").value)};
+  ["ampla","restrita"].forEach(rg=>{v[rg]={geral:{},pequena:{},parque:{}};["geral","pequena"].forEach(tb=>ITEMS.forEach(i=>v[rg][tb][i[0]]=Number($(`#v_${rg}_${tb}_${i[0]}`).value)));["varr","posto8","posto16"].forEach(k=>v[rg].parque[k]=Number($(`#v_${rg}_parque_${k}`).value))});
+  return v;
+}
+function valErr(v){
+  const e=[],all=[];["ampla","restrita"].forEach(rg=>["geral","pequena","parque"].forEach(tb=>Object.values(v[rg][tb]).forEach(n=>all.push(n))));
+  if(all.some(n=>!isFinite(n)||n<0))e.push("Todos os valores devem ser números não negativos.");
+  if(!(v.Fator>0))e.push("O fator de reajuste deve ser positivo.");
+  if(!(v.LimitePequena>0))e.push("O limite de pequenas áreas deve ser positivo.");
+  return e;
+}
+async function saveVal(){
+  const v=readVal(),e=valErr(v);$("#verr").innerHTML=e.map(t=>`<li>${esc(t)}</li>`).join("");if(e.length)return;
+  try{if(S.db)await S.db.doc("config/valores").set(v);S.val=dm(VDEF,v);toast("Tabela de valores publicada. Vale para novos envios; registros já enviados mantêm o valor da época.");render()}catch(x){toast("Não foi possível gravar: "+(x.message||x.code))}
+}
+function fillVal(v){$("#v_Versao").value=v.Versao;$("#v_Regime").value=v.Regime;$("#v_Fator").value=v.Fator;$("#v_LimitePequena").value=v.LimitePequena;["ampla","restrita"].forEach(rg=>{["geral","pequena"].forEach(tb=>ITEMS.forEach(i=>$(`#v_${rg}_${tb}_${i[0]}`).value=v[rg][tb][i[0]]));["varr","posto8","posto16"].forEach(k=>$(`#v_${rg}_parque_${k}`).value=v[rg].parque[k])})}
+
+async function savePar(){
+  const p={VersaoRegra:$("#p_VersaoRegra").value.trim()||DEF.VersaoRegra};
+  Object.keys(PLBL).forEach(k=>p[k]=Number($("#p_"+k).value));
+  const e=paramErr(p);$("#perr").innerHTML=e.map(t=>`<li>${esc(t)}</li>`).join("");
+  if(e.length)return;
+  try{if(S.db)await S.db.doc("config/parametros").set(p);S.params={...DEF,...p};toast("Versão da regra publicada.");render()}catch(x){toast("Não foi possível gravar: "+(x.message||x.code))}
+}
+
+/* ============ Guia do painel ============ */
+function vGuia(){
+  const rows=[
+   ["Andamento","Estruturas por situação (Rascunho, Em aprovação, Aprovado pela Gerência, Validado final, Devolvido) e % aprovado.","Cadastro","Gerente, Usuário final","Mostra onde o diagnóstico está parado. Meta de cobertura depende da lista oficial de estruturas."],
+   ["Exportação","Tabela Excel montada pelo usuário: nível (estrutura, UC ou Gerência), Gerências, quantitativos e categorias.","Diagnósticos com validação final","Usuário final","Somas e médias ignoram campos vazios. Média de IUP/IPS não é IUP/IPS da UC."],
+   ["Cobertura de UCs","UCs do cadastro com ao menos uma estrutura registrada, por Gerência.","Notion (Áreas protegidas) + cadastro","Gerente, Usuário final","Mostra quantas das 169 áreas já têm diagnóstico. Atualizar a relação ao mudar o cadastro."],
+   ["Cobertura por Gerência","Estruturas, validadas, pendentes, áreas e carga por Gerência.","Cadastro","Usuário final","Gerência sem registro indica lacuna de coleta."],
+   ["Valor referencial (R$/mês)","Soma, por tipo de serviço, de área × valor unitário do CadTerc Vol. 03. É o cálculo final do painel e da exportação.","Áreas do diagnóstico + tabela de valores","Gerente, Usuário final","Estimativa de referência, não é preço contratado. Depende do regime de licitação e do fator de reajuste."],
+   ["Carga técnica relativa","[(Área int. / produtividade) × (dias/7) + (área ext. / produtividade) × fator externo] × (1 + pesos × índices).","Regra + parâmetros","Usuário final","Índice analítico para priorizar. Não é nº de postos nem preço, e não entra no cálculo do valor."],
+   ["IUP","Intensidade de uso, 0 a 13, por faixa (baixo, moderado, intenso, muito intenso).","Visitação, dias, horas, sazonalidade","Gerente, Gestor","Prioriza estruturas de maior pressão de uso."],
+   ["Classe sanitária","SAN-1 a SAN-4, a partir do IPS e da disponibilidade horária.","Sanitários","Gerente","Hipótese analítica, não enquadramento normativo."],
+   ["Modalidade indicada","Regular, com cobertura, compartilhado, volante ou sem uso.","Área, dias, IUP, IPS","Usuário final","Confirmar distância, acesso e logística antes de decidir."],
+   ["Atenção","Estruturas com IUP ≥ 7 ou IPS ≥ 6, por carga.","Resultados","Gerente","Lista de trabalho para revisão e visita."],
+   ["Pendências","Rascunhos e devolvidos, com motivo.","Fluxo de aprovação","Gestor, Gerente","Cobrança objetiva de correção."]];
+  return `<div class="panel"><h2>Proposta do painel gerencial</h2><p class="sub">Leitura pretendida, fonte e cautela de cada bloco. Atualização: em tempo real nesta versão; em produção, diária a partir da tabela Diagnosticos.</p>
+  <div class="tw guide"><table><thead><tr><th>Bloco</th><th>Definição</th><th>Fonte</th><th>Público</th><th>Cautela</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+  <h3 style="font-size:15px;margin-top:20px">Como o valor referencial é calculado</h3>
+  <div class="tw"><table><tbody>
+   <tr><td>Base</td><td>Prestação de Serviços de Limpeza, Asseio e Conservação Predial, Vol. 03 do CadTerc (data-base jan/2023, versão 02 de set/2023). Valor mensal de cada tipo de serviço = área de piso (projeção horizontal, sem paredes, portas e divisórias) × valor unitário em R$/m²/mês.</td></tr>
+   <tr><td>Tabela aplicada</td><td>Se construído + externo somam até 750 m², vale a tabela de pequenas áreas (Apêndice 4); acima disso, a tabela geral (Capítulo III). Parques estaduais usam o Apêndice 3 para varrição e para os postos sanitários. O regime (ampla ou restrita a ME/EPP) e o fator de reajuste são definidos em Parâmetros.</td></tr>
+   <tr><td>Áreas internas</td><td>Quem preenche pode detalhar acarpetado, laboratório, almoxarifado, oficina e saguão. O restante da área interna é valorado como piso frio (ou almoxarifado, se o uso for galpão/oficina).</td></tr>
+   <tr><td>Sanitários</td><td>O sanitário de uso público classe SAN-3 ou SAN-4 é valorado como "sanitário de grande circulação". Em parque, vira posto sanitário (SAN-3 = 8 h, SAN-4 = 16 h; 1 posto por estrutura) e sai da área em m². Os demais sanitários ficam no piso frio.</td></tr>
+   <tr><td>Áreas externas</td><td>Pisos pavimentados e varrição podem ser detalhados. O restante da área externa é valorado como pátio e área verde na frequência calculada: semanal = alta, quinzenal = média, mensal = baixa.</td></tr>
+   <tr><td>Fora do cálculo</td><td>Limpeza de vidros externos e coleta de detritos em pátios (R$/ha) não são coletadas neste levantamento. Estrutura com 0 dia de uso por semana tem valor zero. Carga técnica, IUP e IPS não alteram o valor.</td></tr>
+   <tr><td>Equipe e tempo</td><td>Estimativa gerencial: área ÷ produtividade do CadTerc (m² por funcionário, por tipo de serviço) dá os postos equivalentes, mais 1 encarregado para cada 30. Horas por mês = postos × jornada de referência (44 h por semana na tabela geral; 24 h por semana, meio período, nas pequenas áreas; pátios pela frequência do quadro de periodicidades). Dias: 2ª a sábado, ou 7 dias nos serviços de parque. Não é exigência contratual: o documento veda produtividades e quantitativos de profissionais no edital (item 1.11).</td></tr>
+   <tr><td>Congelamento</td><td>O valor é gravado ao enviar o diagnóstico, com a tabela vigente. Mudar a tabela vale para os próximos envios.</td></tr></tbody></table></div>
+  <h3 style="font-size:15px;margin-top:20px">Perfis e fluxo</h3>
+  <div class="tw"><table><thead><tr><th>Perfil</th><th>Faz</th><th>Vê</th></tr></thead><tbody>
+   <tr><td>Gestor</td><td>Preenche os diagnósticos das UCs sob sua responsabilidade, uma estrutura por vez ("Adicionar estrutura" ou "Enviar e cadastrar outra"), e envia para aprovação. Corrige o que for devolvido.</td><td>Somente o que ele próprio enviou, nas UCs atribuídas. Envios de outras pessoas não aparecem.</td></tr>
+   <tr><td>Gerente</td><td>Aprova ou devolve (com motivo obrigatório) os diagnósticos da sua Gerência.</td><td>Somente a sua Gerência.</td></tr>
+   <tr><td>Validador final</td><td>Faz a validação final dos diagnósticos aprovados pelos Gerentes ("Validar (final)") ou os devolve ao gestor, com motivo obrigatório. Também exporta.</td><td>Diagnósticos aprovados pela Gerência e já validados, de todas as UCs.</td></tr>
+   <tr><td>Usuário final</td><td>Consulta o painel e monta a tabela Excel com os quantitativos que precisa.</td><td>Somente diagnósticos com validação final, de todas as UCs.</td></tr>
+   <tr><td>Administrador</td><td>Atribui perfis (UCs do Gestor, Gerências do Gerente), mantém parâmetros e o cadastro. Pode testar cada perfil em "Ver como".</td><td>Tudo, inclusive todos os envios recebidos. Para ler envios de todos, Gerente, Validador final e Usuário final precisam do compartilhamento "Pode editar" (limite da plataforma).</td></tr></tbody></table></div>
+  <p class="note" style="max-width:70ch">Fluxo: Rascunho → Em aprovação (Gerente) → Aprovado pela Gerência (Validador final) → Validado final, ou Devolvido ao gestor em qualquer das duas etapas. Editar um diagnóstico já aprovado abre nova revisão e exige nova aprovação e nova validação final. Quem entra sem perfil vê apenas a tela de solicitação de acesso.</p>
+  <p class="note" style="max-width:70ch">Nesta versão, o controle de perfis é feito pela interface. Ele orienta o uso, mas não impede um usuário técnico de gravar diretamente na base. Na implantação em Power Apps, o controle deve ser aplicado na fonte de dados.</p></div>`;
+}
+
+/* ============ CSV ============ */
+async function exportCsv(){
+  const cols=[...TXT.filter(k=>!["Observacoes","UCTipo","UCCadastro","Responsavel","Contato"].includes(k)),...NUM,...ITENS,"Observacoes","Status",...RES,"ValorMensal","VersaoRegra"];
+  const q=v=>{if(v==null)return"";const s=typeof v==="number"?String(v).replace(".",","):String(v);return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  const csv="﻿"+cols.join(";")+"\n"+filtered().map(x=>cols.map(k=>q(x[k])).join(";")).join("\n");
+  try{const d=await window.claude.use("downloads");if(!d)throw 0;await d.save({filename:"diagnostico_limpeza_uc_"+new Date().toISOString().slice(0,10)+".csv",data:csv});toast("Arquivo salvo.")}
+  catch(e){if(e&&e.code==="declined")return;toast("Exportação indisponível nesta visualização.")}
+}
+
+/* ============ Eventos ============ */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button,tr[data-open]");if(!t)return;
+  if(t.dataset.view){go(t.dataset.view);return}
+  if(t.dataset.open){openRec(t.dataset.open);return}
+  if(t.dataset.flag){setFlag(t.dataset.flag,Number(t.dataset.v));return}
+  if(t.dataset.uc!==undefined){pickUc(Number(t.dataset.uc));return}
+  if(t.dataset.tipo){pickTipo(t.dataset.tipo);return}
+  if(t.dataset.ucg!==undefined){S.ucG=t.dataset.ucg;renderUcBox();return}
+  if(t.dataset.eg){toggle(S.exp.ger,t.dataset.eg);vExpRefresh();return}
+  if(t.dataset.est){toggle(S.exp.st,t.dataset.est);vExpRefresh();return}
+  if(t.dataset.elvl){S.exp.lvl=t.dataset.elvl;vExpRefresh();return}
+  if(t.dataset.epre){expPreset(t.dataset.epre);return}
+  if(t.dataset.asgp){S.asg.perfil=t.dataset.asgp;renderAsg();return}
+  if(t.dataset.asgg){UCS.filter(u=>u[2]===t.dataset.asgg).forEach(u=>S.asg.ucs.add(u[0]));renderAsgList();return}
+  if(t.dataset.asgclear!==undefined){S.asg.ucs.clear();renderAsgList();return}
+  if(t.dataset.psel){openAsg(t.dataset.psel);return}
+  const a=t.dataset.act;if(!a)return;
+  if(a==="fila"){S.fSt="Em validação";S.fGer="";go("reg")}
+  else if(a==="filaH"){S.fSt="Validado";S.fGer="";go("reg")}
+  else if(a==="homologar")transition(t.dataset.id,"Homologado","");
+  else if(a==="novo"){S.form=newForm();S.edit=null;go("form")}
+  else if(a==="cancelar"){const was=!!S.edit;S.form=null;S.edit=null;go(was?(perfil()==="gestor"?"minha":"reg"):(perfil()==="gestor"?"minha":"painel"))}
+  else if(a==="rascunho")submit(false);
+  else if(a==="concluir")submit(true);
+  else if(a==="concluirmais")submit(true,true);
+  else if(a==="novaUc"){S.form=newForm();applyUc(S.form,t.dataset.nuc);S.edit=null;S.ucManual=false;go("form")}
+  else if(a==="csv")exportCsv();
+  else if(a==="trocaruc"){S.form.UC="";S.form.Gerencia="";S.form.Categoria="";S.form.UCTipo="";S.ucQ="";S.ucG="";renderUcBox();refreshCheck();const q=$("#ucQ");q&&q.focus()}
+  else if(a==="ucmanual"){S.ucManual=true;S.form.UC="";S.form.Gerencia="";S.form.Categoria="";S.form.UCTipo="";S.form.UCCadastro="Manual";renderUcBox();refreshCheck()}
+  else if(a==="ucvoltar"){S.ucManual=false;S.form.UC="";S.form.Gerencia="";S.form.Categoria="";S.form.UCTipo="";S.form.UCCadastro="Notion";renderUcBox();refreshCheck()}
+  else if(a==="dup"){const x=S.recs.find(r=>r.ID===t.dataset.id);if(!x)return;S.form={...blankRec(),...Object.fromEntries([...TXT,...NUM,...ITENS].map(k=>[k,x[k]??(NUMK(k)?null:"")]))};S.form.ID="";S.form.Observacoes="";S.form.Responsavel=S.me.name||S.form.Responsavel;S.form.Estrutura=x.Estrutura+" (cópia)";S.edit=null;S.ucManual=false;$("#dlg").close();go("form")}
+  else if(a==="fechar")$("#dlg").close();
+  else if(a==="outra"){$("#dlg").close();S.form=newForm();Object.assign(S.form,S._keep||{});S.ucManual=false;S.view="form";render();window.scrollTo({top:0})}
+  else if(a==="edit"){const x=S.recs.find(r=>r.ID===t.dataset.id);if(!x)return;S.form={...blankRec(),...Object.fromEntries([...TXT,...NUM,...ITENS].map(k=>[k,x[k]??(NUMK(k)?null:"")]))};S.edit=x;$("#dlg").close();go("form")}
+  else if(a==="validar")transition(t.dataset.id,"Validado","");
+  else if(a==="devolver")transition(t.dataset.id,"Devolvido",$("#motivo")?.value||"");
+  else if(a==="excluir"){const id=t.dataset.id;(async()=>{try{const x=S.recs.find(r=>r.ID===id);if(!x)return;await delRec(x);$("#dlg").close();toast("Rascunho excluído.");render()}catch(x){toast("Não foi possível excluir.")}})()}
+  else if(a==="salvarpar")savePar();
+  else if(a==="salvarval")saveVal();
+  else if(a==="padraoval")fillVal(VDEF);
+  else if(a==="asg")openAsg(t.dataset.uid);
+  else if(a==="asgsalvar")saveAsg();
+  else if(a==="remover")removeAcc(t.dataset.uid);
+  else if(a==="recusar")recusar(t.dataset.uid);
+  else if(a==="solicitar")solicitar();
+  else if(a==="copiarmsg"){const m=$("#rqMsg");try{navigator.clipboard.writeText(m.value).then(()=>toast("Mensagem copiada."),()=>{m.select();toast("Selecione e copie a mensagem.")})}catch{m.select();toast("Selecione e copie a mensagem.")}}
+  else if(a==="xlsx")exportXlsx();
+  else if(a==="ecsv")exportExpCsv();
+  else if(a==="padrao"){Object.keys(PLBL).forEach(k=>$("#p_"+k).value=DEF[k]);$("#p_VersaoRegra").value=DEF.VersaoRegra}
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="ucQ"){S.ucQ=el.value;renderUcList();return}
+  if(el.id==="asgQ"){S.asg.q=el.value;renderAsgList();return}
+  if(el.id==="pSearch"){psSearch(el.value);return}
+  if(el.dataset&&el.dataset.k&&S.form){const k=el.dataset.k;
+    if(NUMK(k)){S.form[k]=el.value===""?null:Number(el.value)}else S.form[k]=el.value;
+    if(el.dataset.sel&&NUMK(k))S.form[k]=el.value===""?null:Number(el.value);
+    refreshCheck();return}
+  if(el.id==="fQ"){S.fQ=el.value;const p=el.selectionStart;render();const n=$("#fQ");n.focus();n.setSelectionRange(p,p)}
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.id==="vAs"){S.viewAs=el.value;S.form=null;S.edit=null;S.view=el.value==="gestor"?"minha":"painel";render()}
+  else if(el.dataset&&el.dataset.em){toggle(S.exp.meas,el.dataset.em,el.checked);vExpRefresh()}
+  else if(el.dataset&&el.dataset.ei){toggle(S.exp.items,el.dataset.ei,el.checked);vExpRefresh()}
+  else if(el.dataset&&el.dataset.ec){toggle(S.exp.cats,el.dataset.ec,el.checked);vExpRefresh()}
+  else if(el.id==="eResp"){S.exp.resp=el.checked;vExpRefresh()}
+  else if(el.dataset&&el.dataset.asguc){toggle(S.asg.ucs,el.dataset.asguc,el.checked);const c=$("#asgCount");if(c)c.textContent=S.asg.ucs.size+" selecionada(s)"}
+  else if(el.dataset&&el.dataset.asgger){toggle(S.asg.gers,el.dataset.asgger,el.checked)}
+  else if(el.id==="fDemo"){S.hideDemo=el.checked;render()}
+  else if(el.id==="fGer"){S.fGer=el.value;render()}
+  else if(el.id==="fSt"){S.fSt=el.value;render()}
+  else if(el.dataset&&el.dataset.sel&&S.form){const k=el.dataset.k;S.form[k]=NUMK(k)?(el.value===""?null:Number(el.value)):el.value;if(k==="Categoria"){const ci=CATS.indexOf(el.value);S.form.UCTipo=ci>=0?CAT_TIPO[ci]:""}refreshCheck()}
+});
+document.addEventListener("keydown",e=>{if(e.target.id==="ucQ"&&e.key==="Enter"){e.preventDefault();const m=ucMatches(S.ucQ);if(m.length===1)pickUc(m[0][1])}});
+$("#dlg").addEventListener("close",()=>{S.asg=null;if(S.view!=="form")render()});
+boot();
+</script>
+
+</body></html>
