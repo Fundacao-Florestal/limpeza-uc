@@ -26,6 +26,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm ci
+      - name: Testar cálculo e validação
+        run: npm run test:calculo
       - name: Testar regras
         run: |
           set -o pipefail

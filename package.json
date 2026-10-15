@@ -7,7 +7,8 @@
     "dev": "node scripts/dev.mjs",
     "test": "firebase emulators:exec --only firestore --project demo-limpeza-uc \"node --test test/regras.test.mjs\"",
     "importar": "node scripts/importar.mjs",
-    "deploy": "firebase deploy --only hosting,firestore"
+    "deploy": "firebase deploy --only hosting,firestore",
+    "test:calculo": "node --test test/calculo.test.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0"

@@ -1,6 +1,12 @@
 /* Validação do formulário e indicadores calculados (IUP, IPS, classe sanitária, IHOS, frequência externa, modalidade, carga técnica). */
 "use strict";
 
+const somaDet=(r,ks)=>ks.reduce((a,k)=>a+(Number(r[k])||0),0);
+const fArea=n=>Number(n).toLocaleString("pt-BR",{maximumFractionDigits:2})+" m²";
+function difArea(tipo,soma,total){
+  const d=total-soma;
+  return `Áreas ${tipo}: o detalhamento soma ${fArea(soma)}, mas o total declarado é ${fArea(total)}. ${d>0?"Faltam "+fArea(d):"Sobram "+fArea(-d)} para bater.`;
+}
 function check(r,recs,isEdit){
   const blank=[],err=[];
   ["UC","Gerencia","Estrutura","Tipo","Responsavel"].forEach(k=>{if(!String(r[k]??"").trim())blank.push(k)});
@@ -19,9 +25,16 @@ function check(r,recs,isEdit){
   if(g("Sanitario")===0&&DEP_SAN.some(k=>g(k)>0))err.push("Há dados sanitários sem sanitário informado.");
   if(g("Hospedaria")===0&&DEP_HOSP.some(k=>g(k)>0))err.push("Há dados de hospedagem sem hospedaria informada.");
   ITENS.forEach(k=>{if(nv(r,k)<0)err.push(LBL[k]+" não pode ser negativo.")});
-  const sI=["A_acarp","A_lab","A_almox","A_ofic","A_saguao"].reduce((a,k)=>a+(nv(r,k)||0),0),sE=["A_pav","A_varr","A_patAlta","A_patMedia","A_patBaixa"].reduce((a,k)=>a+(nv(r,k)||0),0);
-  if(sI>(g("AreaInterna")||0))err.push("A soma das áreas internas detalhadas supera a área interna.");
-  if(sE>(g("AreaExterna")||0))err.push("A soma das áreas externas detalhadas supera a área externa.");
+  /* O detalhamento é obrigatório e tem de bater com o total declarado (diferença de até 0,01 m²). */
+  const sI=somaDet(r,ITENS_INT),sE=somaDet(r,ITENS_EXT),tI=g("AreaInterna")||0,tE=g("AreaExterna")||0;
+  if(Math.abs(sI-tI)>0.01)err.push(difArea("internas",sI,tI));
+  if(Math.abs(sE-tE)>0.01)err.push(difArea("externas",sE,tE));
+  if(g("Sanitario")===1&&(g("AreaSanitaria")||0)>(nv(r,"A_frio")||0))err.push("A área sanitária faz parte dos pisos frios: informe pisos frios de pelo menos "+fArea(g("AreaSanitaria"))+".");
+  if(g("Vidros")===1){
+    if(!((g("A_vidro")||0)>0))err.push("Informe a área de vidros externos (uma face).");
+    if(!(g("VidroFreq")===1||g("VidroFreq")===2))err.push("Informe se a limpeza externa dos vidros é trimestral ou semestral.");
+  }
+  if(g("Vidros")===0&&DEP_VID.some(k=>g(k)>0))err.push("Há dados de vidros sem vidros externos informados.");
   return{blank,err};
 }
 function paramErr(p){
