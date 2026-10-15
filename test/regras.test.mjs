@@ -57,13 +57,15 @@ test("sem login não lê nada", async () => {
   await assertFails(getDoc(doc(db(null), "config", "valores")));
 });
 
-test("e-mail não confirmado não lê nem grava nada, nem com perfil", async () => {
+test("e-mail não confirmado entra, mas sem perfil só pede acesso", async () => {
   await seed("e1", base());
-  await assertFails(getDoc(doc(db("adm", false), "estruturas", "e1")));
-  await assertFails(getDoc(doc(db("gest", false), "acessos", "gest")));
-  await assertFails(getDoc(doc(db("novo", false), "config", "valores")));
-  await assertFails(setDoc(doc(db("novo", false), "pedidos", "novo"), { Uid: "novo", Perfil: "gestor", Obs: "", Em: "x" }));
-  await assertFails(setDoc(doc(db("novo", false), "usuarios", "novo"), { Uid: "novo", Nome: "N", Email: "n@x", UltimoAcesso: "x" }));
+  await assertSucceeds(setDoc(doc(db("novo", false), "usuarios", "novo"), { Uid: "novo", Nome: "N", Email: "n@x", UltimoAcesso: "x" }));
+  await assertSucceeds(setDoc(doc(db("novo", false), "pedidos", "novo"), { Uid: "novo", Perfil: "gestor", Obs: "", Em: "x" }));
+  await assertSucceeds(getDoc(doc(db("novo", false), "config", "valores")));
+  await assertFails(getDoc(doc(db("novo", false), "estruturas", "e1")));
+  await assertFails(getDocs(collection(db("novo", false), "estruturas")));
+  await assertFails(setDoc(doc(db("novo", false), "acessos", "novo"), { Uid: "novo", Perfil: "admin" }));
+  await assertSucceeds(getDoc(doc(db("adm", false), "estruturas", "e1")));
 });
 
 test("gestor cria e edita só o que é dele, nas UCs dele", async () => {

@@ -34,7 +34,7 @@ function fbDomains(){return (window.ALLOWED_EMAIL_DOMAINS||[]).map(d=>String(d).
 function fbDomainOk(email){const d=fbDomains(),e=String(email||"").toLowerCase();return !d.length||d.some(x=>e.endsWith("@"+x))}
 function fbReset(){
   fbStop(FB_SUBS);fbStop(FB_ROLE_SUBS);FB_ROLE_KEY=null;
-  Object.assign(S,{me:{id:null,canEdit:false,name:"",email:"",verified:false},isAdmin:false,isOwner:false,acc:null,accReady:false,accAll:[],pedidos:[],pedido:null,recs:[],usersAll:[],viewAs:"",started:false,valDoc:false,paramsDoc:false,params:{...DEF}});
+  Object.assign(S,{me:{id:null,canEdit:false,name:"",email:""},isAdmin:false,isOwner:false,acc:null,accReady:false,accAll:[],pedidos:[],pedido:null,recs:[],usersAll:[],viewAs:"",started:false,valDoc:false,paramsDoc:false,params:{...DEF}});
   S.val=clone(VDEF);
 }
 function fbSession(u){
@@ -43,9 +43,7 @@ function fbSession(u){
   if(!fbDomainOk(u.email)){S.loginErr="O e-mail "+(u.email||"usado")+" não pertence a um domínio autorizado. Use o e-mail institucional.";S.auth.signOut();return}
   S.loginErr="";S.loginMode="entrar";
   const nome=u.displayName||S.pendingName||"";
-  S.me.id=u.uid;S.me.name=nome||u.email||"";S.me.email=u.email||"";S.me.verified=!!u.emailVerified;S.names[u.uid]=S.me.name||"Usuário";
-  /* Sem e-mail confirmado o banco não libera nada (firestore.rules); fica só a tela de confirmação. */
-  if(!u.emailVerified){setSync(false,"Confirme seu e-mail para continuar");render();return}
+  S.me.id=u.uid;S.me.name=nome||u.email||"";S.me.email=u.email||"";S.names[u.uid]=S.me.name||"Usuário";
   setSync(true,"Base conectada");
   S.db.doc("usuarios/"+u.uid).set({Uid:u.uid,Nome:nome,Email:u.email||"",UltimoAcesso:new Date().toISOString()},{merge:true}).catch(()=>{});
   FB_SUBS.push(S.db.doc("acessos/"+u.uid).onSnapshot(sn=>{S.acc=sn.exists?sn.data():null;S.accReady=true;fbRole()},()=>{S.acc=null;S.accReady=true;fbRole()}));

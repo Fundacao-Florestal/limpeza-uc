@@ -12,7 +12,7 @@ window.FIREBASE_CONFIG = {
 };
 
 // Login por e-mail e senha.
-// true: a própria pessoa cria a conta na tela de login (e confirma o e-mail antes de usar).
+// true: a própria pessoa cria a conta na tela de login e pede o perfil; o Administrador aprova ou não.
 // false: esconde "Criar conta"; o Administrador cria as contas em Authentication > Users > Adicionar usuário.
 //        Desative também a criação de contas no console (README, passo 3), senão ela continua possível fora desta tela.
 window.ALLOW_SIGNUP = true;
@@ -24,5 +24,5 @@ window.ALLOWED_EMAIL_DOMAINS = ["fflorestal.sp.gov.br", "sp.gov.br"];
 // O "npm run dev" (http://localhost:5050) já usa os emuladores e entra como Administrador, sem login.
 // true força os emuladores também em outro servidor local.
 // Só vale quando o site é aberto em localhost: publicado, o app sempre usa o projeto real.
-// No modo local, os e-mails de confirmação não são enviados: o link aparece no terminal do npm run dev.
+// No modo local, e-mails (como o de nova senha) não são enviados: o link aparece no terminal do npm run dev.
 window.USE_EMULATORS = false;

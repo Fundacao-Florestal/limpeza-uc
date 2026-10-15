@@ -69,7 +69,7 @@ O perfil de cada pessoa fica em `acessos/<uid>`. As regras do Firestore aplicam 
 | Validador final (`validador`) | Estruturas aprovadas, homologadas ou devolvidas | Faz a validação final ou devolve; não altera o conteúdo |
 | Usuário final (`final`) | Só estruturas com validação final | Nada |
 
-Quem entra sem perfil vê apenas a tela de pedido de acesso. Antes disso, a pessoa precisa confirmar o e-mail pelo link que o sistema envia: sem a confirmação o banco não libera nada, nem para quem já tem perfil. É isso que impede alguém de criar uma conta com o e-mail de um colega e pedir perfil no nome dele.
+Quem entra sem perfil vê apenas a tela de pedido de acesso. O e-mail não é confirmado: quem decide o acesso é o Administrador, ao atribuir o perfil. Como qualquer pessoa pode criar uma conta com um e-mail que não é dela (dentro dos domínios aceitos), confira com a pessoa por fora (Teams, telefone) antes de aprovar um pedido. Para voltar a exigir a confirmação de e-mail, veja o comentário em `signedIn()` no `firestore.rules`.
 
 Coleções do Firestore: `estruturas/<ID>` (um documento por estrutura), `acessos/<uid>`, `pedidos/<uid>`, `usuarios/<uid>` (nome e e-mail de quem já entrou) e `config/valores`, `config/parametros`.
 
@@ -89,7 +89,7 @@ Em **Authentication > Primeiros passos > Método de login**, ative **E-mail/senh
 
 Ainda em **Authentication**:
 
-- **Modelos** (Templates): troque o idioma para português e, se quiser, ajuste o nome do remetente. São os e-mails de confirmação de conta e de nova senha.
+- **Modelos** (Templates): troque o idioma para português e, se quiser, ajuste o nome do remetente. O app só usa o modelo de redefinição de senha.
 - **Configurações > Domínios autorizados**: confira se aparece o domínio onde o app vai rodar (o `*.web.app` do projeto já vem incluído). Os links dos e-mails só funcionam nesses domínios.
 - **Configurações > Política de senha** (opcional, se aparecer no seu plano): exija tamanho mínimo e tipos de caractere. O app já exige ao menos 8 caracteres na criação da conta.
 
@@ -97,7 +97,7 @@ Ainda em **Authentication**:
 
 1. Em `public/firebase-config.js`, ponha `ALLOW_SIGNUP = false` (some o botão "Criar conta").
 2. Em **Authentication > Configurações > Ações do usuário**, desmarque **Ativar criação (inscrição)**. Sem isso, a criação de contas continua possível por fora da tela.
-3. Crie cada conta em **Authentication > Users > Adicionar usuário** e passe a senha inicial à pessoa. No primeiro acesso ela confirma o e-mail pelo próprio sistema e pode trocar a senha em "Esqueci a senha".
+3. Crie cada conta em **Authentication > Users > Adicionar usuário** e passe a senha inicial à pessoa. Ela pode trocar a senha em "Esqueci a senha".
 
 ### 4. Ligar o app ao projeto
 
@@ -123,7 +123,7 @@ O endereço do site aparece no final (`https://<projeto>.web.app`).
 
 ### 6. Criar o primeiro Administrador
 
-1. Abra o site, crie a sua conta e confirme o e-mail pelo link recebido. Vai aparecer a tela de pedido de acesso. (Se desligou a criação de contas, crie a sua em **Authentication > Users > Adicionar usuário**, entre no site e confirme o e-mail.)
+1. Abra o site, crie a sua conta. Vai aparecer a tela de pedido de acesso. (Se desligou a criação de contas, crie a sua em **Authentication > Users > Adicionar usuário**, e entre no site.)
 2. No console, em **Authentication > Users**, copie o UID da sua conta.
 3. Em **Firestore Database**, crie a coleção `acessos` com um documento cujo ID é esse UID e os campos `Uid` (string, o mesmo UID) e `Perfil` (string, `admin`).
 4. Recarregue o site. Daqui em diante os perfis são atribuídos pela aba **Acessos**.
@@ -159,7 +159,7 @@ npm test
 
 Sobe o emulador do Firestore e verifica, perfil por perfil, o que as regras liberam e bloqueiam. Precisa de Java 21.
 
-O teste da interface roda o app num navegador com um Firebase falso em memória (criar conta, confirmar e-mail, entrar, recuperar senha, perfis, gravação, aprovação, download):
+O teste da interface roda o app num navegador com um Firebase falso em memória (criar conta, entrar, recuperar senha, perfis, gravação, aprovação, download):
 
 ```bash
 pip install playwright && playwright install chromium
@@ -170,7 +170,7 @@ Para testar no seu computador sem tocar no projeto real, rode `npm run dev` e ab
 
 ## O que mudou em relação ao artefato
 
-- **Login**: antes era a conta do claude.ai; agora é e-mail e senha no Firebase Authentication, com confirmação de e-mail e recuperação de senha.
+- **Login**: antes era a conta do claude.ai; agora é e-mail e senha no Firebase Authentication, com recuperação de senha; o acesso depende da aprovação do Administrador.
 - **Dados**: antes cada pessoa gravava todas as suas estruturas num único documento (`envios/<pessoa>`); agora cada estrutura é um documento em `estruturas/`, o que permite aplicar o escopo de cada perfil no banco.
 - **Perfis**: antes o controle era só da interface, e Gerentes e Validadores precisavam de permissão de edição no artefato para ler os envios. Agora as regras do Firestore liberam exatamente o escopo de cada perfil.
 - **Busca de pessoas**: o Administrador encontra quem já entrou no sistema ao menos uma vez.
