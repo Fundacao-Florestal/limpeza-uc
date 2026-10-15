@@ -1,10 +1,8 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
+// Configuração do app Web do Firebase.
+// Copie os valores em: Console do Firebase > Configurações do projeto > Geral > Seus apps > Configuração do SDK (opção "Config").
+// Estes valores não são segredo; quem protege os dados são as regras em firestore.rules.
+// Enquanto apiKey estiver como "COLE_AQUI", o app abre em modo local (dados só na sessão, sem login).
+window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyDel8_1MR8asctJbGReqxKKPKYKLXwMaFA",
   authDomain: "limpeza-uc-ff.firebaseapp.com",
   projectId: "limpeza-uc-ff",
@@ -21,9 +19,10 @@ window.ALLOW_SIGNUP = true;
 
 // Domínios de e-mail aceitos, ex.: ["exemplo.sp.gov.br"]. Vazio aceita qualquer domínio.
 // Este filtro é da interface; a trava no banco fica em contaPermitida(), no firestore.rules.
-window.ALLOWED_EMAIL_DOMAINS = ["fflorestal.sp.gov", "sp.gov.br"];
+window.ALLOWED_EMAIL_DOMAINS = ["fflorestal.sp.gov.br", "sp.gov.br"];
 
-// true para testar no seu computador com "npm run dev" (emuladores, em http://localhost:5050).
+// O "npm run dev" (http://localhost:5050) já usa os emuladores e entra como Administrador, sem login.
+// true força os emuladores também em outro servidor local.
 // Só vale quando o site é aberto em localhost: publicado, o app sempre usa o projeto real.
 // No modo local, os e-mails de confirmação não são enviados: o link aparece no terminal do npm run dev.
 window.USE_EMULATORS = false;

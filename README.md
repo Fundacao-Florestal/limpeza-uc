@@ -166,7 +166,7 @@ pip install playwright && playwright install chromium
 python3 test/interface/teste_interface.py .
 ```
 
-Para testar no seu computador sem tocar no projeto real, ponha `USE_EMULATORS = true` em `firebase-config.js`, rode `npm run dev` e abra http://localhost:5050. O banco e o login são locais e somem ao fechar. Os e-mails de confirmação não são enviados: o link aparece no terminal. Precisa de Java 21. Volte `USE_EMULATORS` para `false` antes de publicar (publicado, o app ignora essa opção de qualquer forma).
+Para testar no seu computador sem tocar no projeto real, rode `npm run dev` e abra http://localhost:5050. Não há tela de login: o app entra sozinho como Administrador (`dev@sp.gov.br`); para ver como Gestor, use "Ver como" no topo. O banco e o login são locais e somem ao fechar. Ao salvar qualquer arquivo em `public/`, a página recarrega sozinha (mudança só em CSS troca o estilo sem recarregar). Os e-mails de confirmação não são enviados: o link aparece no terminal. Precisa de Java 21.
 
 ## O que mudou em relação ao artefato
 

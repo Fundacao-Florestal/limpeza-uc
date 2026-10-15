@@ -11,8 +11,8 @@ let FB_SUBS=[],FB_ROLE_SUBS=[],FB_ROLE_KEY=null;
 function fbStop(a){a.forEach(f=>{try{f()}catch{}});a.length=0}
 function fbConfigured(){const c=window.FIREBASE_CONFIG;return !!(window.firebase&&c&&c.apiKey&&!/COLE_AQUI/.test(c.apiKey))}
 async function boot(){
-  /* Com USE_EMULATORS, usa um projeto de demonstração local, sem tocar no projeto real (npm run dev). */
-  const emu=!!window.USE_EMULATORS&&["localhost","127.0.0.1"].includes(location.hostname);
+  /* No npm run dev (emulador de Hosting, porta 5050) ou com USE_EMULATORS, usa um projeto de demonstração local, sem tocar no projeto real. */
+  const emu=["localhost","127.0.0.1"].includes(location.hostname)&&(location.port==="5050"||!!window.USE_EMULATORS);
   if(!emu&&!fbConfigured()){S.db=null;setSync(false,"Modo local: Firebase não configurado; os dados valem só para esta sessão");onData();render();return}
   try{
     firebase.initializeApp(emu?{apiKey:"demo-key",authDomain:"localhost",projectId:"demo-limpeza-uc"}:window.FIREBASE_CONFIG);
@@ -21,7 +21,14 @@ async function boot(){
   }catch(e){S.db=null;S.auth=null;setSync(false,"Falha ao iniciar o Firebase");onData();render();return}
   try{S.auth.useDeviceLanguage()}catch{}
   render();
-  S.auth.onAuthStateChanged(u=>fbSession(u));
+  S.auth.onAuthStateChanged(u=>{if(!u&&emu)devLogin();else fbSession(u)});
+}
+/* No npm run dev não há tela de login: entra com a conta de Administrador que scripts/dev.mjs cria no emulador.
+   Para ver como Gestor, use "Ver como" no topo. Tenta de novo enquanto a conta ainda não foi criada. */
+const DEV_LOGIN={email:"dev@sp.gov.br",senha:"dev-local-123"};
+function devLogin(n=0){
+  setSync(false,"Modo local: entrando como Administrador…");
+  S.auth.signInWithEmailAndPassword(DEV_LOGIN.email,DEV_LOGIN.senha).catch(()=>{if(n<20)setTimeout(()=>devLogin(n+1),1000);else fbSession(null)});
 }
 function fbDomains(){return (window.ALLOWED_EMAIL_DOMAINS||[]).map(d=>String(d).toLowerCase().trim().replace(/^@/,"")).filter(Boolean)}
 function fbDomainOk(email){const d=fbDomains(),e=String(email||"").toLowerCase();return !d.length||d.some(x=>e.endsWith("@"+x))}
