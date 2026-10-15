@@ -5,15 +5,18 @@ const ITEMS=[["frio","Pisos frios","int"],["acarp","Pisos acarpetados","int"],["
 const ITENS=["A_acarp","A_lab","A_almox","A_ofic","A_saguao","A_pav","A_varr","A_patAlta","A_patMedia","A_patBaixa"];
 Object.assign(LBL,{A_acarp:"Pisos acarpetados",A_lab:"Laboratórios",A_almox:"Almoxarifados / galpões",A_ofic:"Oficinas",A_saguao:"Saguão, hall e salão",A_pav:"Pisos pavimentados adjacentes",A_varr:"Varrição de passeios e arruamentos",A_patAlta:"Pátios · alta frequência",A_patMedia:"Pátios · média frequência",A_patBaixa:"Pátios · baixa frequência"});
 
-const VDEF={Versao:"CadTerc Vol. 03 · data-base jan/2023 (versão 02, set/2023)",Regime:"ampla",Fator:1,LimitePequena:750,
+/* Valores do CadTerc Vol. 03, versão 1 (agosto/2026), data-base janeiro/2026, em R$/m²/mês (postos em R$/posto/mês).
+   ampla: Quadro 38 (geral), Quadro 161 (pequenas áreas, Apêndice 4), Quadro 145 (parques, Apêndice 3).
+   restrita (ME/EPP): Quadro 84 (geral), Quadro 178 (pequenas áreas), Quadro 154 (parques). */
+const VDEF={Versao:"CadTerc Vol. 03 · data-base jan/2026 (versão 1, ago/2026)",Regime:"ampla",Fator:1,LimitePequena:750,
  ampla:{
-  geral:{frio:6.82,acarp:6.82,lab:12.39,almox:3.03,ofic:3.41,saguao:5.11,sanGC:8.38,pav:3.41,varr:0.72,patAlta:0.65,patMedia:0.32,patBaixa:0.17},
-  pequena:{frio:10.05,acarp:10.05,lab:18.25,almox:4.46,ofic:5.02,saguao:7.54,sanGC:13.16,pav:5.02,varr:1.04,patAlta:0.87,patMedia:0.44,patBaixa:0.22},
-  parque:{varr:0.90,posto8:7922.18,posto16:15844.36}},
+  geral:{frio:8.89,acarp:8.89,lab:16.15,almox:3.95,ofic:4.45,saguao:6.68,sanGC:10.84,pav:4.45,varr:0.91,patAlta:0.83,patMedia:0.42,patBaixa:0.21},
+  pequena:{frio:11.71,acarp:11.71,lab:21.26,almox:5.21,ofic:5.85,saguao:8.78,sanGC:15.60,pav:5.85,varr:1.20,patAlta:1.00,patMedia:0.50,patBaixa:0.25},
+  parque:{varr:1.15,posto8:10247.16,posto16:20494.32}},
  restrita:{
-  geral:{frio:6.38,acarp:6.38,lab:11.58,almox:2.83,ofic:3.19,saguao:4.79,sanGC:7.79,pav:3.19,varr:0.67,patAlta:0.60,patMedia:0.30,patBaixa:0.16},
-  pequena:{frio:9.52,acarp:9.52,lab:17.29,almox:4.23,ofic:4.76,saguao:7.14,sanGC:12.34,pav:4.76,varr:0.99,patAlta:0.82,patMedia:0.42,patBaixa:0.21},
-  parque:{varr:0.84,posto8:7360.82,posto16:14721.64}}};
+  geral:{frio:8.31,acarp:8.31,lab:15.08,almox:3.69,ofic:4.16,saguao:6.23,sanGC:10.07,pav:4.16,varr:0.85,patAlta:0.78,patMedia:0.38,patBaixa:0.20},
+  pequena:{frio:10.92,acarp:10.92,lab:19.83,almox:4.85,ofic:5.46,saguao:8.19,sanGC:14.44,pav:5.46,varr:1.12,patAlta:0.93,patMedia:0.47,patBaixa:0.23},
+  parque:{varr:1.07,posto8:9517.19,posto16:19034.38}}};
 function dm(a,b){const o=clone(a);if(!b||typeof b!=="object")return o;for(const k of Object.keys(o)){const x=b[k];if(x==null)continue;if(o[k]&&typeof o[k]==="object")o[k]=dm(o[k],x);else if(typeof o[k]==="number"){if(isFinite(Number(x)))o[k]=Number(x)}else o[k]=x}return o}
 /* Coeficientes de participação do CadTerc Vol. 03 (m² por funcionário) e jornadas de referência. Uso gerencial, não é exigência contratual (item 1.11). */
 const PROD={

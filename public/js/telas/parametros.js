@@ -26,7 +26,7 @@ function vVal(){
   <div class="tw vt" style="margin-top:12px"><table><thead><tr><th>Parques estaduais (Apêndice 3)</th><th class="n">Ampla</th><th class="n">Restrita</th></tr></thead><tbody>
   ${[["varr","Varrição de passeios e arruamentos (R$/m²/mês)"],["posto8","Posto sanitário 8 h diárias (R$/posto/mês)"],["posto16","Posto sanitário 16 h diárias (R$/posto/mês)"]].map(([k,t])=>`<tr><td>${t}</td>${["ampla","restrita"].map(rg=>`<td class="n">${inp(`v_${rg}_parque_${k}`,v[rg].parque[k])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
   <div id="verr" class="chk" style="margin-top:12px"></div>
-  <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="salvarval" ${ed?"":"disabled"}>Publicar tabela</button><button class="btn" data-act="padraoval" ${ed?"":"disabled"}>Restaurar CadTerc jan/2023</button></div></div>`;
+  <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="salvarval" ${ed?"":"disabled"}>Publicar tabela</button><button class="btn" data-act="padraoval" ${ed?"":"disabled"}>Restaurar CadTerc jan/2026</button></div></div>`;
 }
 function readVal(){
   const v={Versao:$("#v_Versao").value.trim()||VDEF.Versao,Regime:$("#v_Regime").value,Fator:Number($("#v_Fator").value),LimitePequena:Number($("#v_LimitePequena").value)};
