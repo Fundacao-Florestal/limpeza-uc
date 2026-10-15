@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "firebase emulators:start --project demo-limpeza-uc",
-    "test": "firebase emulators:exec --only firestore --project demo-limpeza-uc \"node --test test/\"",
+    "test": "firebase emulators:exec --only firestore --project demo-limpeza-uc \"node --test test/regras.test.mjs\"",
     "importar": "node scripts/importar.mjs",
     "deploy": "firebase deploy --only hosting,firestore"
   },
