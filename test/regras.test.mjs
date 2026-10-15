@@ -28,7 +28,10 @@ const base = (o = {}) => ({
   AtualizadoEm: "2026-10-14T00:00:00.000Z", ...o,
 });
 
-const db = (uid) => (uid ? env.authenticatedContext(uid).firestore() : env.unauthenticatedContext().firestore());
+const db = (uid, verificado = true) =>
+  uid
+    ? env.authenticatedContext(uid, { email: uid + "@ff.test", email_verified: verificado }).firestore()
+    : env.unauthenticatedContext().firestore();
 
 async function seed(id, data) {
   await env.withSecurityRulesDisabled(async (c) => setDoc(doc(c.firestore(), "estruturas", id), data));
@@ -52,6 +55,15 @@ test("sem login não lê nada", async () => {
   await seed("e1", base());
   await assertFails(getDoc(doc(db(null), "estruturas", "e1")));
   await assertFails(getDoc(doc(db(null), "config", "valores")));
+});
+
+test("e-mail não confirmado não lê nem grava nada, nem com perfil", async () => {
+  await seed("e1", base());
+  await assertFails(getDoc(doc(db("adm", false), "estruturas", "e1")));
+  await assertFails(getDoc(doc(db("gest", false), "acessos", "gest")));
+  await assertFails(getDoc(doc(db("novo", false), "config", "valores")));
+  await assertFails(setDoc(doc(db("novo", false), "pedidos", "novo"), { Uid: "novo", Perfil: "gestor", Obs: "", Em: "x" }));
+  await assertFails(setDoc(doc(db("novo", false), "usuarios", "novo"), { Uid: "novo", Nome: "N", Email: "n@x", UltimoAcesso: "x" }));
 });
 
 test("gestor cria e edita só o que é dele, nas UCs dele", async () => {

@@ -38,6 +38,7 @@ one('</style>\n\n<div class="wrap">',
     '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>\n'
     '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>\n'
     '<script src="firebase-config.js"></script>\n'
+    '<style>input[type=email],input[type=password]{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-height:38px;font:inherit;color:inherit}</style>\n'
     '</head><body>\n\n<div class="wrap">')
 
 # ---------- Conexão: Firebase Auth + Firestore no lugar da plataforma do artefato ----------
@@ -55,25 +56,28 @@ async function boot(){
     S.auth=firebase.auth();S.db=firebase.firestore();
     if(window.USE_EMULATORS){S.auth.useEmulator("http://localhost:9099");S.db.useEmulator("localhost",8080)}
   }catch(e){S.db=null;S.auth=null;setSync(false,"Falha ao iniciar o Firebase");onData();render();return}
+  try{S.auth.useDeviceLanguage()}catch{}
   render();
-  try{await S.auth.getRedirectResult()}catch(e){S.loginErr=authMsg(e)}
   S.auth.onAuthStateChanged(u=>fbSession(u));
 }
+function fbDomains(){return (window.ALLOWED_EMAIL_DOMAINS||[]).map(d=>String(d).toLowerCase().trim().replace(/^@/,"")).filter(Boolean)}
+function fbDomainOk(email){const d=fbDomains(),e=String(email||"").toLowerCase();return !d.length||d.some(x=>e.endsWith("@"+x))}
 function fbReset(){
   fbStop(FB_SUBS);fbStop(FB_ROLE_SUBS);FB_ROLE_KEY=null;
-  Object.assign(S,{me:{id:null,canEdit:false,name:"",email:""},isAdmin:false,isOwner:false,acc:null,accReady:false,accAll:[],pedidos:[],pedido:null,recs:[],usersAll:[],viewAs:"",started:false,valDoc:false,paramsDoc:false,params:{...DEF}});
+  Object.assign(S,{me:{id:null,canEdit:false,name:"",email:"",verified:false},isAdmin:false,isOwner:false,acc:null,accReady:false,accAll:[],pedidos:[],pedido:null,recs:[],usersAll:[],viewAs:"",started:false,valDoc:false,paramsDoc:false,params:{...DEF}});
   S.val=clone(VDEF);
 }
 function fbSession(u){
   fbReset();S.authReady=true;
   if(!u){setSync(false,"Entre com sua conta para continuar");render();return}
-  const dom=(window.ALLOWED_EMAIL_DOMAINS||[]).map(d=>String(d).toLowerCase().replace(/^@/,"")).filter(Boolean);
-  const em=String(u.email||"").toLowerCase();
-  if(dom.length&&!dom.some(d=>em.endsWith("@"+d))){S.loginErr="A conta "+(u.email||"usada")+" não pertence a um domínio autorizado. Entre com a conta institucional.";S.auth.signOut();return}
-  S.loginErr="";
-  S.me.id=u.uid;S.me.name=u.displayName||u.email||"";S.me.email=u.email||"";S.names[u.uid]=S.me.name||"Usuário";
+  if(!fbDomainOk(u.email)){S.loginErr="O e-mail "+(u.email||"usado")+" não pertence a um domínio autorizado. Use o e-mail institucional.";S.auth.signOut();return}
+  S.loginErr="";S.loginMode="entrar";
+  const nome=u.displayName||S.pendingName||"";
+  S.me.id=u.uid;S.me.name=nome||u.email||"";S.me.email=u.email||"";S.me.verified=!!u.emailVerified;S.names[u.uid]=S.me.name||"Usuário";
+  /* Sem e-mail confirmado o banco não libera nada (firestore.rules); fica só a tela de confirmação. */
+  if(!u.emailVerified){setSync(false,"Confirme seu e-mail para continuar");render();return}
   setSync(true,"Base conectada");
-  S.db.doc("usuarios/"+u.uid).set({Uid:u.uid,Nome:u.displayName||"",Email:u.email||"",UltimoAcesso:new Date().toISOString()},{merge:true}).catch(()=>{});
+  S.db.doc("usuarios/"+u.uid).set({Uid:u.uid,Nome:nome,Email:u.email||"",UltimoAcesso:new Date().toISOString()},{merge:true}).catch(()=>{});
   FB_SUBS.push(S.db.doc("acessos/"+u.uid).onSnapshot(sn=>{S.acc=sn.exists?sn.data():null;S.accReady=true;fbRole()},()=>{S.acc=null;S.accReady=true;fbRole()}));
   FB_SUBS.push(S.db.doc("pedidos/"+u.uid).onSnapshot(sn=>{S.pedido=sn.exists?sn.data():null;onData()},()=>{}));
   FB_SUBS.push(S.db.doc("config/valores").onSnapshot(sn=>{S.val=sn.exists?dm(VDEF,sn.data()):clone(VDEF);S.valDoc=sn.exists;onData()},()=>{}));
@@ -109,26 +113,78 @@ function fbRole(){
 }
 function authMsg(e){
   const c=(e&&e.code)||"";
-  if(c==="auth/popup-closed-by-user"||c==="auth/cancelled-popup-request")return "";
-  if(c==="auth/unauthorized-domain")return "Este endereço não está autorizado no Firebase (Authentication > Configurações > Domínios autorizados).";
-  if(c==="auth/operation-not-allowed")return "Este método de login não está ativado no Firebase.";
-  if(c==="auth/account-exists-with-different-credential")return "Já existe uma conta com este e-mail usando outro método de login.";
-  return "Não foi possível entrar ("+(c||(e&&e.message)||"erro desconhecido")+").";
+  const M={
+    "auth/invalid-credential":"E-mail ou senha incorretos.","auth/invalid-login-credentials":"E-mail ou senha incorretos.",
+    "auth/wrong-password":"E-mail ou senha incorretos.","auth/user-not-found":"E-mail ou senha incorretos.",
+    "auth/email-already-in-use":"Já existe uma conta com este e-mail. Use Entrar ou Esqueci a senha.",
+    "auth/weak-password":"Senha fraca. Use ao menos 8 caracteres.",
+    "auth/password-does-not-meet-requirements":"A senha não atende aos requisitos definidos para o sistema.",
+    "auth/invalid-email":"E-mail inválido.","auth/missing-password":"Informe a senha.",
+    "auth/user-disabled":"Esta conta foi desativada. Fale com o Administrador.",
+    "auth/too-many-requests":"Muitas tentativas seguidas. Aguarde alguns minutos ou use Esqueci a senha.",
+    "auth/network-request-failed":"Sem conexão com o servidor. Verifique a internet e tente de novo.",
+    "auth/operation-not-allowed":"O login por e-mail e senha não está ativado no Firebase.",
+    "auth/admin-restricted-operation":"A criação de contas está desativada. Peça ao Administrador para criar a sua."};
+  return M[c]||"Não foi possível concluir ("+(c||(e&&e.message)||"erro desconhecido")+").";
 }
-async function fbLogin(k){
-  let p;
-  if(k==="google"){p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"})}
-  else{p=new firebase.auth.OAuthProvider("microsoft.com");const t=window.MICROSOFT_TENANT;p.setCustomParameters(t?{tenant:t,prompt:"select_account"}:{prompt:"select_account"})}
-  try{await S.auth.signInWithPopup(p)}
-  catch(e){
-    if(e&&(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")){try{await S.auth.signInWithRedirect(p);return}catch(x){e=x}}
-    S.loginErr=authMsg(e);render();
+function fbMode(md){S.loginEmail=($("#lgEmail")&&$("#lgEmail").value)||S.loginEmail||"";S.loginMode=md;S.loginErr="";S.loginOk="";render();const f=$("#main input");if(f)f.focus()}
+async function fbEmail(k){
+  const v=id=>(($("#"+id)||{}).value||"");
+  const email=v("lgEmail").trim();S.loginEmail=email;S.loginErr="";S.loginOk="";
+  /* Mostra o erro sem redesenhar o formulário, para não apagar o que a pessoa digitou. */
+  const fail=m=>{S.loginErr=m;const el=$("#lgErr");if(el){el.innerHTML=`<div class="banner">${esc(m)}</div>`;el.scrollIntoView({block:"nearest"})}else render()};
+  {const el=$("#lgErr");if(el)el.innerHTML=""}
+  if(k!=="senha"&&!fbDomainOk(email))return fail("Use um e-mail dos domínios autorizados: "+fbDomains().map(d=>"@"+d).join(", ")+".");
+  const btn=$("#main form button[type=submit]");if(btn)btn.disabled=true;
+  try{
+    if(k==="entrar")await S.auth.signInWithEmailAndPassword(email,v("lgSenha"));
+    else if(k==="criar"){
+      const nome=v("lgNome").trim().replace(/\s+/g," ");
+      if(nome.length<3)return fail("Informe o nome completo.");
+      if(v("lgSenha").length<8)return fail("A senha precisa ter ao menos 8 caracteres.");
+      if(v("lgSenha")!==v("lgSenha2"))return fail("As senhas não conferem.");
+      S.pendingName=nome;
+      const c=await S.auth.createUserWithEmailAndPassword(email,v("lgSenha"));
+      await c.user.updateProfile({displayName:nome});
+      S.me.name=nome;S.loginErr="";
+      try{await c.user.sendEmailVerification();S.verifySent=Date.now()}catch{}
+      render();
+    }else{
+      if(!email)return fail("Informe o e-mail da conta.");
+      try{await S.auth.sendPasswordResetEmail(email)}catch(e){if(e&&e.code!=="auth/user-not-found")throw e}
+      S.loginMode="entrar";S.loginOk="Se houver uma conta com esse e-mail, enviamos um link para criar uma nova senha. Confira também a caixa de spam.";render();
+    }
+  }catch(e){fail(authMsg(e))}
+  finally{const b=$("#main form button[type=submit]");if(b)b.disabled=false}
+}
+async function fbVerify(k){
+  const u=S.auth&&S.auth.currentUser;if(!u)return;
+  if(k==="reenviar"){
+    if(S.verifySent&&Date.now()-S.verifySent<60000){toast("Aguarde um minuto antes de pedir outro e-mail.");return}
+    try{await u.sendEmailVerification();S.verifySent=Date.now();toast("E-mail de confirmação enviado.")}catch(e){toast(authMsg(e))}
+    return;
   }
+  try{
+    await u.reload();
+    const cu=S.auth.currentUser;
+    if(cu&&cu.emailVerified){await cu.getIdToken(true);fbSession(cu)}
+    else toast("A confirmação ainda não consta. Clique no link do e-mail e tente de novo.");
+  }catch(e){toast(authMsg(e))}
 }
 function vLogin(){
-  const P=(Array.isArray(window.AUTH_PROVIDERS)&&window.AUTH_PROVIDERS.length)?window.AUTH_PROVIDERS:["microsoft"];
-  const L={microsoft:"Entrar com conta Microsoft",google:"Entrar com conta Google"};
-  return `<div class="panel" style="max-width:560px;margin:8px auto 0"><h2>Entrar</h2><p class="sub">Use sua conta institucional para acessar o diagnóstico de limpeza das UCs. No primeiro acesso você solicita o perfil, e o Administrador libera.</p>${S.loginErr?`<div class="banner">${esc(S.loginErr)}</div>`:""}<div class="bar" style="margin:16px 0 0">${P.map((k,i)=>`<button class="btn ${i?"":"pri"}" data-fb="login" data-prov="${esc(k)}">${esc(L[k]||k)}</button>`).join("")}</div></div>`;
+  const md=S.loginMode||"entrar",signup=window.ALLOW_SIGNUP!==false;
+  const box=(t,sub,body)=>`<div class="panel" style="max-width:520px;margin:8px auto 0"><h2>${t}</h2><p class="sub">${sub}</p><div id="lgErr" role="alert">${S.loginErr?`<div class="banner">${esc(S.loginErr)}</div>`:""}</div>${S.loginOk?`<p class="note" style="color:var(--ok);font-weight:500">${esc(S.loginOk)}</p>`:""}${body}</div>`;
+  const em=`<label class="f wide">E-mail<input type="email" id="lgEmail" autocomplete="email" required value="${esc(S.loginEmail||"")}"></label>`;
+  const link=(m,t)=>`<button class="btn" type="button" data-fbmode="${m}">${t}</button>`;
+  if(md==="criar"&&signup)return box("Criar conta","Depois de criar a conta, confirme o e-mail pelo link que vamos enviar e solicite o seu perfil. O Administrador libera o acesso.",
+    `<form data-fbform="criar" novalidate><div class="fields"><label class="f wide">Nome completo<input type="text" id="lgNome" autocomplete="name" required></label>${em}<label class="f">Senha <small>mínimo 8 caracteres</small><input type="password" id="lgSenha" autocomplete="new-password" required minlength="8"></label><label class="f">Repita a senha<input type="password" id="lgSenha2" autocomplete="new-password" required minlength="8"></label></div><div class="bar" style="margin:16px 0 0"><button class="btn pri" type="submit">Criar conta</button>${link("entrar","Já tenho conta")}</div></form>`);
+  if(md==="senha")return box("Recuperar senha","Informe o e-mail da conta. Enviaremos um link para criar uma nova senha.",
+    `<form data-fbform="senha" novalidate><div class="fields">${em}</div><div class="bar" style="margin:16px 0 0"><button class="btn pri" type="submit">Enviar link</button>${link("entrar","Voltar")}</div></form>`);
+  return box("Entrar","Acesse com seu e-mail e senha."+(signup?" No primeiro acesso, crie sua conta e solicite o perfil.":" Se ainda não tem conta, peça ao Administrador."),
+    `<form data-fbform="entrar" novalidate><div class="fields">${em}<label class="f wide">Senha<input type="password" id="lgSenha" autocomplete="current-password" required></label></div><div class="bar" style="margin:16px 0 0"><button class="btn pri" type="submit">Entrar</button>${signup?link("criar","Criar conta"):""}<span class="sp"></span>${link("senha","Esqueci a senha")}</div></form>`);
+}
+function vVerify(){
+  return `<div class="panel" style="max-width:560px;margin:8px auto 0"><h2>Confirme seu e-mail</h2><p class="sub">Enviamos um link de confirmação para <b>${esc(S.me.email)}</b>. Abra o e-mail, clique no link e volte aqui. Confira também a caixa de spam.</p><p class="note">A confirmação garante que a conta é mesmo de quem diz ser, antes de o Administrador liberar um perfil.</p><div class="bar" style="margin:16px 0 0"><button class="btn pri" data-fbv="ok">Já confirmei</button><button class="btn" data-fbv="reenviar">Reenviar e-mail</button><span class="sp"></span><button class="btn" data-fb="logout">Sair</button></div></div>`;
 }
 function downloadFile(filename,data,type){
   const blob=data instanceof Blob?data:new Blob([data],{type:type||"application/octet-stream"});
@@ -160,7 +216,8 @@ one('if(!S.db)return (window.claude&&window.claude.use)?null:"admin";', 'if(!S.d
 one('function render(){\n  const m=$("#main");\n',
     'function render(){\n  const m=$("#main");\n'
     '  if(S.auth&&!S.authReady){$("#tabs").innerHTML="";m.innerHTML=\'<div class="panel empty">Conectando…</div>\';return}\n'
-    '  if(S.auth&&!S.me.id){$("#tabs").innerHTML="";$("#whoami").innerHTML="";m.innerHTML=vLogin();return}\n')
+    '  if(S.auth&&!S.me.id){$("#tabs").innerHTML="";$("#whoami").innerHTML="";m.innerHTML=vLogin();return}\n'
+    '  if(S.auth&&!S.me.verified){$("#tabs").innerHTML="";$("#whoami").innerHTML="";m.innerHTML=vVerify();return}\n')
 i = s.find('  const pf=perfil();\n  if(S.db&&!S.isAdmin&&(pf==="gerente"')
 j = s.find('\n', s.find('Até lá, esta tela mostra apenas o que você mesmo enviou.', i))
 if i < 0 or j < 0:
@@ -175,7 +232,7 @@ between('  const how=`<p class="note" style="margin-top:0">Para usar o sistema',
 one('catch(e){toast(e&&e.code==="invalid_argument"?"Sua permissão é somente de leitura. Peça ao proprietário a permissão Pode interagir.":"Não foi possível enviar: "+(e.message||e.code))}',
     'catch(e){toast(e&&e.code==="permission-denied"?"O banco recusou a solicitação. Se você já tem perfil, recarregue a página.":"Não foi possível enviar: "+(e.message||e.code))}')
 between('<li>A pessoa precisa ser membro da sua organização no Claude.', '</ol></section>',
-        '<li>Envie o endereço do sistema. A pessoa entra com a conta institucional e solicita o perfil; o pedido aparece em "Solicitações pendentes".</li>'
+        '<li>Envie o endereço do sistema. A pessoa cria a conta com e-mail e senha, confirma o e-mail e solicita o perfil; o pedido aparece em "Solicitações pendentes".</li>'
         '<li>Para atribuir antes do pedido, busque a pessoa em "Adicionar pessoa". Só aparece quem já entrou no sistema ao menos uma vez.</li>'
         '<li>O perfil vale assim que é gravado: o banco passa a liberar exatamente o escopo atribuído (UCs do Gestor, Gerências do Gerente).</li>')
 one('placeholder="Buscar por nome"', 'placeholder="Buscar por nome ou e-mail"')
@@ -205,8 +262,11 @@ if n < 2:
 
 # ---------- Eventos de login/logout ----------
 one('\nboot();\n</script>',
-    '\ndocument.addEventListener("click",e=>{const t=e.target.closest("[data-fb]");if(!t)return;'
-    'if(t.dataset.fb==="login")fbLogin(t.dataset.prov);else if(t.dataset.fb==="logout"&&S.auth)S.auth.signOut()});\n'
+    '\ndocument.addEventListener("click",e=>{'
+    'const m=e.target.closest("[data-fbmode]");if(m){fbMode(m.dataset.fbmode);return}'
+    'const v=e.target.closest("[data-fbv]");if(v){fbVerify(v.dataset.fbv);return}'
+    'const t=e.target.closest("[data-fb]");if(t&&t.dataset.fb==="logout"&&S.auth){S.loginOk="";S.auth.signOut()}});\n'
+    'document.addEventListener("submit",e=>{const f=e.target.closest("[data-fbform]");if(!f)return;e.preventDefault();fbEmail(f.dataset.fbform)});\n'
     'boot();\n</script>')
 
 left = re.findall(r'window\.claude|S\._user|S\.legIds|"envios', s)

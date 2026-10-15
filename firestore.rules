@@ -19,8 +19,12 @@ service cloud.firestore {
       return true;
     }
 
+    // Login por e-mail e senha: só vale conta com e-mail confirmado. Sem isso, qualquer pessoa
+    // poderia criar uma conta com o e-mail de um colega e pedir perfil no nome dele.
     function signedIn() {
-      return request.auth != null && contaPermitida();
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && contaPermitida();
     }
     function accPath() {
       return /databases/$(database)/documents/acessos/$(request.auth.uid);

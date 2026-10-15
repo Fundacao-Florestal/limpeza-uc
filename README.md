@@ -2,7 +2,7 @@
 
 Diagnóstico da necessidade de limpeza predial das unidades de conservação da Fundação Florestal. Cada Gestor cadastra as estruturas da sua UC, o Gerente aprova, o Validador final valida, e o painel consolida o valor referencial mensal calculado pela tabela CadTerc.
 
-Esta versão roda no **Firebase**: login pelo Firebase Authentication (conta Microsoft institucional ou Google), dados no Firestore e site no Firebase Hosting. Ela substitui o artefato original do claude.ai, guardado em `legado/`.
+Esta versão roda no **Firebase**: login com e-mail e senha pelo Firebase Authentication, dados no Firestore e site no Firebase Hosting. Ela substitui o artefato original do claude.ai, guardado em `legado/`.
 
 ## O que tem aqui
 
@@ -29,7 +29,7 @@ O perfil de cada pessoa fica em `acessos/<uid>`. As regras do Firestore aplicam 
 | Validador final (`validador`) | Estruturas aprovadas, homologadas ou devolvidas | Faz a validação final ou devolve; não altera o conteúdo |
 | Usuário final (`final`) | Só estruturas com validação final | Nada |
 
-Quem entra sem perfil vê apenas a tela de pedido de acesso.
+Quem entra sem perfil vê apenas a tela de pedido de acesso. Antes disso, a pessoa precisa confirmar o e-mail pelo link que o sistema envia: sem a confirmação o banco não libera nada, nem para quem já tem perfil. É isso que impede alguém de criar uma conta com o e-mail de um colega e pedir perfil no nome dele.
 
 Coleções do Firestore: `estruturas/<ID>` (um documento por estrutura), `acessos/<uid>`, `pedidos/<uid>`, `usuarios/<uid>` (nome e e-mail de quem já entrou) e `config/valores`, `config/parametros`.
 
@@ -45,20 +45,26 @@ Em **Firestore Database > Criar banco de dados**, escolha o modo de produção e
 
 ### 3. Ativar o login
 
-Em **Authentication > Método de login**:
+Em **Authentication > Primeiros passos > Método de login**, ative **E-mail/senha**. Deixe desligada a opção "Link do e-mail (login sem senha)".
 
-- **Microsoft** (recomendado para contas institucionais): é preciso registrar um aplicativo no Microsoft Entra ID (portal do Azure > Registros de aplicativo). Use como URI de redirecionamento o endereço que o próprio Firebase mostra nessa tela (termina em `/__/auth/handler`), gere um segredo do cliente e cole a ID do aplicativo e o segredo no Firebase. Quem administra o Microsoft 365 da FF faz esse registro.
-- **Google**: basta ativar.
+Ainda em **Authentication**:
 
-Em **Authentication > Configurações > Domínios autorizados**, confira se aparece o domínio onde o app vai rodar (o `*.web.app` do projeto já vem incluído).
+- **Modelos** (Templates): troque o idioma para português e, se quiser, ajuste o nome do remetente. São os e-mails de confirmação de conta e de nova senha.
+- **Configurações > Domínios autorizados**: confira se aparece o domínio onde o app vai rodar (o `*.web.app` do projeto já vem incluído). Os links dos e-mails só funcionam nesses domínios.
+- **Configurações > Política de senha** (opcional, se aparecer no seu plano): exija tamanho mínimo e tipos de caractere. O app já exige ao menos 8 caracteres na criação da conta.
+
+**Quem cria as contas.** Por padrão, a própria pessoa cria a conta na tela de login. Se preferir que só o Administrador crie:
+
+1. Em `public/firebase-config.js`, ponha `ALLOW_SIGNUP = false` (some o botão "Criar conta").
+2. Em **Authentication > Configurações > Ações do usuário**, desmarque **Ativar criação (inscrição)**. Sem isso, a criação de contas continua possível por fora da tela.
+3. Crie cada conta em **Authentication > Users > Adicionar usuário** e passe a senha inicial à pessoa. No primeiro acesso ela confirma o e-mail pelo próprio sistema e pode trocar a senha em "Esqueci a senha".
 
 ### 4. Ligar o app ao projeto
 
 Em **Configurações do projeto > Geral > Seus apps**, adicione um app Web e copie a configuração para `public/firebase-config.js`. No mesmo arquivo:
 
-- `AUTH_PROVIDERS`: quais botões de login aparecem (`"microsoft"`, `"google"`).
-- `MICROSOFT_TENANT`: o ID do locatário Microsoft 365 da FF, para só aceitar contas de lá.
-- `ALLOWED_EMAIL_DOMAINS`: domínios de e-mail aceitos. Para travar também no banco, edite `contaPermitida()` em `firestore.rules`.
+- `ALLOW_SIGNUP`: se a própria pessoa pode criar a conta (veja o passo 3).
+- `ALLOWED_EMAIL_DOMAINS`: domínios de e-mail aceitos, por exemplo só o institucional. Para travar também no banco, edite `contaPermitida()` em `firestore.rules`.
 
 Esses valores não são segredo e podem ser commitados.
 
@@ -77,7 +83,7 @@ O endereço do site aparece no final (`https://<projeto>.web.app`).
 
 ### 6. Criar o primeiro Administrador
 
-1. Abra o site e entre com a sua conta. Vai aparecer a tela de pedido de acesso.
+1. Abra o site, crie a sua conta e confirme o e-mail pelo link recebido. Vai aparecer a tela de pedido de acesso. (Se desligou a criação de contas, crie a sua em **Authentication > Users > Adicionar usuário**, entre no site e confirme o e-mail.)
 2. No console, em **Authentication > Users**, copie o UID da sua conta.
 3. Em **Firestore Database**, crie a coleção `acessos` com um documento cujo ID é esse UID e os campos `Uid` (string, o mesmo UID) e `Perfil` (string, `admin`).
 4. Recarregue o site. Daqui em diante os perfis são atribuídos pela aba **Acessos**.
@@ -113,7 +119,7 @@ npm test
 
 Sobe o emulador do Firestore e verifica, perfil por perfil, o que as regras liberam e bloqueiam. Precisa de Java 21.
 
-O teste da interface roda o app num navegador com um Firebase falso em memória (login, perfis, gravação, aprovação, download):
+O teste da interface roda o app num navegador com um Firebase falso em memória (criar conta, confirmar e-mail, entrar, recuperar senha, perfis, gravação, aprovação, download):
 
 ```bash
 pip install playwright && playwright install chromium
@@ -124,7 +130,7 @@ Para usar o app localmente com os emuladores, ponha `USE_EMULATORS = true` em `f
 
 ## O que mudou em relação ao artefato
 
-- **Login**: antes era a conta do claude.ai; agora é o Firebase Authentication.
+- **Login**: antes era a conta do claude.ai; agora é e-mail e senha no Firebase Authentication, com confirmação de e-mail e recuperação de senha.
 - **Dados**: antes cada pessoa gravava todas as suas estruturas num único documento (`envios/<pessoa>`); agora cada estrutura é um documento em `estruturas/`, o que permite aplicar o escopo de cada perfil no banco.
 - **Perfis**: antes o controle era só da interface, e Gerentes e Validadores precisavam de permissão de edição no artefato para ler os envios. Agora as regras do Firestore liberam exatamente o escopo de cada perfil.
 - **Busca de pessoas**: o Administrador encontra quem já entrou no sistema ao menos uma vez.
@@ -134,4 +140,5 @@ Para usar o app localmente com os emuladores, ponha `USE_EMULATORS = true` em `f
 ## Limites conhecidos
 
 - A Gerência de cada estrutura é preenchida pelo app a partir da UC; as regras confiam nesse campo e não conferem a correspondência UC → Gerência.
+- Para desativar o acesso de alguém, remova o perfil na aba Acessos. Para bloquear também o login, desative a conta em **Authentication > Users**.
 - Cada estrutura cadastrada tem um único Gestor dono. Se a UC trocar de Gestor, o Administrador precisa editar o campo `CriadoPor` das estruturas no console.

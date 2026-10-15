@@ -31,20 +31,49 @@
   }
   const fs = { doc: (p) => docRef(p), collection: (c) => queryRef(c, []), useEmulator() {} };
 
-  let user = null; const authSubs = new Set();
+  // Contas de e-mail e senha em memória.
+  const accounts = new Map(); // email -> {uid, pwd, displayName, emailVerified}
+  const mail = []; // e-mails "enviados": {tipo, para}
+  let user = null, seq = 0; const authSubs = new Set();
+  const err = (code) => { const e = new Error(code); e.code = code; return e; };
+  function makeUser(a, email) {
+    return {
+      uid: a.uid, email, get displayName() { return a.displayName; }, get emailVerified() { return a.emailVerified; },
+      updateProfile: async (p) => { if (p.displayName != null) a.displayName = p.displayName; },
+      sendEmailVerification: async () => { mail.push({ tipo: "verificacao", para: email }); },
+      reload: async () => { user = makeUser(a, email); },
+      getIdToken: async () => "token",
+    };
+  }
+  const fire = () => authSubs.forEach((f) => f(user));
   const auth = {
     get currentUser() { return user; },
-    useEmulator() {},
-    getRedirectResult: async () => ({ user: null }),
+    useEmulator() {}, useDeviceLanguage() {},
     onAuthStateChanged: (f) => { authSubs.add(f); setTimeout(() => f(user), 0); return () => authSubs.delete(f); },
-    signInWithPopup: async (prov) => { user = clone(window.__nextUser); window.__lastProvider = prov; authSubs.forEach((f) => f(user)); return { user }; },
-    signInWithRedirect: async () => {},
-    signOut: async () => { user = null; authSubs.forEach((f) => f(null)); },
+    signInWithEmailAndPassword: async (email, pwd) => {
+      const a = accounts.get(String(email).toLowerCase());
+      if (!a || a.pwd !== pwd) throw err("auth/invalid-credential");
+      user = makeUser(a, email); fire(); return { user };
+    },
+    createUserWithEmailAndPassword: async (email, pwd) => {
+      email = String(email).toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw err("auth/invalid-email");
+      if (accounts.has(email)) throw err("auth/email-already-in-use");
+      if (String(pwd).length < 6) throw err("auth/weak-password");
+      const a = { uid: "u" + (++seq), pwd, displayName: null, emailVerified: false };
+      accounts.set(email, a); user = makeUser(a, email); fire(); return { user };
+    },
+    sendPasswordResetEmail: async (email) => { if (accounts.has(String(email).toLowerCase())) mail.push({ tipo: "senha", para: email }); },
+    signOut: async () => { user = null; fire(); },
   };
-  function OAuthProvider(id) { this.providerId = id; this.setCustomParameters = (p) => { this.params = p; }; }
-  function GoogleAuthProvider() { OAuthProvider.call(this, "google.com"); }
-  const authFn = () => auth; authFn.OAuthProvider = OAuthProvider; authFn.GoogleAuthProvider = GoogleAuthProvider;
+  const authFn = () => auth;
 
   window.firebase = { initializeApp: () => ({}), auth: authFn, firestore: () => fs };
-  window.__mock = { store, emit, log, seed: (p, d) => { store.set(p, clone(d)); emit(); }, get: (p) => (store.has(p) ? clone(store.get(p)) : null) };
+  window.__mock = {
+    store, emit, log, mail,
+    seed: (p, d) => { store.set(p, clone(d)); emit(); },
+    get: (p) => (store.has(p) ? clone(store.get(p)) : null),
+    addUser: (uid, email, pwd, nome) => accounts.set(email, { uid, pwd, displayName: nome, emailVerified: true }),
+    verify: (email) => { accounts.get(email).emailVerified = true; },
+  };
 })();

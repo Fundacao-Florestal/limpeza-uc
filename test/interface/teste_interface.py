@@ -14,7 +14,8 @@ BUILD = pathlib.Path(__file__).parent
 SHOTS = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else pathlib.Path(tempfile.gettempdir())
 HTML = (ROOT / "public/index.html").read_text(encoding="utf8")
 MOCK = (BUILD / "mockfb.js").read_text(encoding="utf8")
-CONFIG = 'window.FIREBASE_CONFIG={apiKey:"teste",projectId:"demo"};window.AUTH_PROVIDERS=["microsoft","google"];window.MICROSOFT_TENANT="tenant-ff";'
+CONFIG = 'window.FIREBASE_CONFIG={apiKey:"teste",projectId:"demo"};window.ALLOW_SIGNUP=true;'
+SENHA = "senha-forte-1"
 
 fails, errors = [], []
 
@@ -41,10 +42,17 @@ def route(r):
         r.continue_()
 
 
-def login(page, uid, nome, prov="microsoft"):
-    page.evaluate("u=>window.__nextUser=u", {"uid": uid, "displayName": nome, "email": uid + "@ff.test"})
-    page.click(f'[data-fb="login"][data-prov="{prov}"]')
+def entrar(page, email, senha):
+    page.fill("#lgEmail", email)
+    page.fill("#lgSenha", senha)
+    page.click('form[data-fbform="entrar"] button[type=submit]')
     page.wait_for_timeout(300)
+
+
+def login(page, uid, nome):
+    """Conta já existente e confirmada."""
+    page.evaluate("([u,e,s,n])=>__mock.addUser(u,e,s,n)", [uid, uid.lower() + "@ff.test", SENHA, nome])
+    entrar(page, uid.lower() + "@ff.test", SENHA)
 
 
 def logout(page):
@@ -61,27 +69,76 @@ with sync_playwright() as p:
     page.goto("http://app.test/index.html")
     page.wait_for_timeout(500)
 
-    check("abre na tela de login", page.is_visible("text=Entrar com conta Microsoft") and page.is_visible("text=Entrar com conta Google"))
+    check("abre na tela de login por e-mail e senha", page.is_visible("#lgEmail") and page.is_visible("#lgSenha"))
+    check("sem botões de Microsoft ou Google", page.locator("text=Microsoft").count() == 0 and page.locator("text=Google").count() == 0)
     check("sem abas antes do login", page.inner_html("#tabs").strip() == "")
     page.screenshot(path=str(SHOTS / "01-login.png"))
 
     uc, ger = page.evaluate("[UCS[0][0],UCS[0][2]]")
 
-    # Pessoa nova: sem perfil, pede acesso
-    login(page, "uNova", "Nova Pessoa")
-    prov = page.evaluate("window.__lastProvider")
-    check("Microsoft com tenant", prov["providerId"] == "microsoft.com" and prov["params"]["tenant"] == "tenant-ff")
-    check("grava cadastro em usuarios", page.evaluate("__mock.get('usuarios/uNova')")["Email"] == "uNova@ff.test")
+    # Senha errada e conta inexistente dão a mesma mensagem
+    page.evaluate("__mock.addUser('uX','x@ff.test','certa-123','X')")
+    entrar(page, "x@ff.test", "errada-123")
+    check("senha errada: mensagem clara", page.is_visible("text=E-mail ou senha incorretos."))
+
+    # Recuperar senha
+    page.click('[data-fbmode="senha"]')
+    page.fill("#lgEmail", "x@ff.test")
+    page.click('form[data-fbform="senha"] button[type=submit]')
+    page.wait_for_timeout(300)
+    check("recuperar senha envia o link", {"tipo": "senha", "para": "x@ff.test"} in page.evaluate("__mock.mail"))
+    check("recuperar senha volta ao Entrar com aviso", page.is_visible("text=enviamos um link para criar uma nova senha") and page.is_visible("#lgSenha"))
+
+    # Pessoa nova: cria conta, confirma o e-mail, pede acesso
+    page.click('[data-fbmode="criar"]')
+    page.fill("#lgNome", "Nova Pessoa")
+    page.fill("#lgEmail", "nova@ff.test")
+    page.fill("#lgSenha", SENHA)
+    page.fill("#lgSenha2", "outra-senha-1")
+    page.click('form[data-fbform="criar"] button[type=submit]')
+    page.wait_for_timeout(200)
+    check("senhas diferentes são barradas", page.is_visible("text=As senhas não conferem."))
+    page.fill("#lgSenha", "curta")
+    page.fill("#lgSenha2", "curta")
+    page.click('form[data-fbform="criar"] button[type=submit]')
+    page.wait_for_timeout(200)
+    check("senha curta é barrada", page.is_visible("text=ao menos 8 caracteres"))
+    page.fill("#lgSenha", SENHA)
+    page.fill("#lgSenha2", SENHA)
+    page.click('form[data-fbform="criar"] button[type=submit]')
+    page.wait_for_timeout(400)
+    check("conta nova cai na tela de confirmar e-mail", page.is_visible("text=Confirme seu e-mail") and page.is_visible("text=nova@ff.test"))
+    check("e-mail de confirmação enviado", {"tipo": "verificacao", "para": "nova@ff.test"} in page.evaluate("__mock.mail"))
+    check("sem e-mail confirmado nada é gravado no banco", page.evaluate("__mock.get('usuarios/u1')") is None)
+    page.screenshot(path=str(SHOTS / "02-confirmar.png"))
+    page.click('[data-fbv="ok"]')
+    page.wait_for_timeout(300)
+    check("'Já confirmei' sem confirmar mantém a tela", page.is_visible("text=Confirme seu e-mail"))
+    page.evaluate("__mock.verify('nova@ff.test')")
+    page.click('[data-fbv="ok"]')
+    page.wait_for_timeout(400)
+    usr = page.evaluate("__mock.get('usuarios/u1')")
+    check("após confirmar grava nome e e-mail", usr and usr["Nome"] == "Nova Pessoa" and usr["Email"] == "nova@ff.test")
     check("sem perfil vê Solicitar acesso", page.is_visible("text=Solicitar acesso"))
     page.select_option("#rqPerfil", "gestor")
     page.fill("#rqObs", uc)
     page.click('[data-act="solicitar"]')
     page.wait_for_timeout(300)
-    ped = page.evaluate("__mock.get('pedidos/uNova')")
+    ped = page.evaluate("__mock.get('pedidos/u1')")
     check("pedido gravado com os campos que as regras aceitam", ped and set(ped) == {"Uid", "Perfil", "Obs", "Em"} and ped["Perfil"] == "gestor")
     check("mostra Solicitação enviada", page.is_visible("text=Solicitação enviada"))
     logout(page)
-    check("Sair volta ao login", page.is_visible("text=Entrar com conta Microsoft"))
+    check("Sair volta à tela Entrar", page.is_visible('form[data-fbform="entrar"]'))
+    page.click('[data-fbmode="criar"]')
+    page.fill("#lgNome", "Repetida")
+    page.fill("#lgEmail", "nova@ff.test")
+    page.fill("#lgSenha", SENHA)
+    page.fill("#lgSenha2", SENHA)
+    page.click('form[data-fbform="criar"] button[type=submit]')
+    page.wait_for_timeout(300)
+    check("e-mail repetido avisa que a conta existe", page.is_visible("text=Já existe uma conta com este e-mail"))
+    page.click('[data-fbmode="entrar"]')
+    page.wait_for_timeout(100)
 
     # Administrador: vê pedidos e atribui perfil
     page.evaluate("__mock.seed('acessos/uAdm',{Uid:'uAdm',Perfil:'admin'})")
@@ -93,7 +150,7 @@ with sync_playwright() as p:
     page.click('[data-view="acc"]')
     page.wait_for_timeout(300)
     check("pedido aparece com o nome da pessoa", page.is_visible("text=Nova Pessoa"))
-    page.fill("#pSearch", "nova")
+    page.fill("#pSearch", "nova@")
     page.wait_for_timeout(400)
     check("busca de pessoas por nome", page.locator("#psRes li").count() >= 1 and "Nova Pessoa" in page.inner_text("#psRes"))
     page.screenshot(path=str(SHOTS / "02-acessos.png"))
@@ -163,8 +220,12 @@ with sync_playwright() as p:
     logout(page)
     page.evaluate("window.ALLOWED_EMAIL_DOMAINS=['fflorestal.sp.gov.br']")
     login(page, "uFora", "Fora")
-    check("domínio não autorizado volta ao login com aviso", page.is_visible("text=não pertence a um domínio autorizado"))
+    check("domínio não autorizado é barrado no login", page.is_visible("text=Use um e-mail dos domínios autorizados") and page.is_visible("#lgSenha"))
     page.screenshot(path=str(SHOTS / "04-dominio.png"))
+    page.evaluate("window.ALLOW_SIGNUP=false");
+    page.click('[data-fbmode="senha"]')
+    page.click('[data-fbmode="entrar"]')
+    check("sem cadastro aberto não mostra Criar conta", page.locator('[data-fbmode="criar"]').count() == 0)
     b.close()
 
 check("sem erros de JavaScript", not errors)

@@ -11,17 +11,15 @@ window.FIREBASE_CONFIG = {
   appId: ""
 };
 
-// Botões de login exibidos, na ordem: "microsoft" e/ou "google".
-// Cada um precisa estar ativado em Authentication > Método de login.
-window.AUTH_PROVIDERS = ["microsoft"];
-
-// ID do locatário (tenant) Microsoft 365 da FF. Preenchido, só contas desse locatário entram pelo botão Microsoft.
-// Vazio aceita qualquer conta Microsoft.
-window.MICROSOFT_TENANT = "";
+// Login por e-mail e senha.
+// true: a própria pessoa cria a conta na tela de login (e confirma o e-mail antes de usar).
+// false: esconde "Criar conta"; o Administrador cria as contas em Authentication > Users > Adicionar usuário.
+//        Desative também a criação de contas no console (README, passo 3), senão ela continua possível fora desta tela.
+window.ALLOW_SIGNUP = true;
 
 // Domínios de e-mail aceitos, ex.: ["exemplo.sp.gov.br"]. Vazio aceita qualquer domínio.
 // Este filtro é da interface; a trava no banco fica em contaPermitida(), no firestore.rules.
 window.ALLOWED_EMAIL_DOMAINS = [];
 
-// true só para testes locais com "firebase emulators:start".
+// true só para testes locais com "npm run dev" (emuladores).
 window.USE_EMULATORS = false;
