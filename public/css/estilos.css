@@ -151,3 +151,17 @@ select.vas{width:auto;min-height:30px;padding:3px 8px;font-size:12px}
 @media (prefers-reduced-motion:no-preference){.hb .fill{transition:width .3s}}
 
 input[type=email],input[type=password]{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-height:38px;font:inherit;color:inherit}
+
+/* Formulário: grupos de área (total + detalhamento) */
+.grp{margin-top:14px;border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--surface)}
+.grp-h{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,260px);gap:8px 16px;align-items:end;margin-bottom:6px}
+.grp-h h3{font-size:14.5px;margin:0 0 10px}
+.grp .sub{margin:4px 0 10px;color:var(--ink2);font-size:12.5px}
+.grp>h3{font-size:14.5px;margin:0}
+.grp .total{margin-bottom:12px}
+.grp .dica{margin:10px 0 0;font-size:12px;line-height:1.5}
+.soma{margin-top:10px;font-size:13px;font-weight:500;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.soma:empty{display:none}
+.soma.ok{color:var(--ok)}
+.soma.bad{color:var(--crit)}
+@media (max-width:560px){.grp-h{grid-template-columns:1fr}.grp-h h3{margin:0}}

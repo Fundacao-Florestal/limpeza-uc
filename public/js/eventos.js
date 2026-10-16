@@ -57,6 +57,7 @@ document.addEventListener("input",e=>{
   if(el.id==="asgQ"){S.asg.q=el.value;renderAsgList();return}
   if(el.id==="pSearch"){psSearch(el.value);return}
   if(el.dataset&&el.dataset.k&&S.form){const k=el.dataset.k;
+    if(el.max!==""&&el.value!==""&&Number(el.value)>Number(el.max))el.value=el.max;
     if(NUMK(k)){S.form[k]=el.value===""?null:Number(el.value)}else S.form[k]=el.value;
     if(el.dataset.sel&&NUMK(k))S.form[k]=el.value===""?null:Number(el.value);
     refreshCheck();return}
