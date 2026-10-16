@@ -1,9 +1,9 @@
 /* Exportação: montagem da tabela para Excel/CSV e o CSV completo da aba Registros. */
 "use strict";
 
-const MEAS=[["AreaInterna","Área interna (m²)","sum"],["AreaExterna","Área externa (m²)","sum"],["AreaSanitaria","Área sanitária (m²)","sum"],["Pessoas","Pessoas na equipe","sum"],["Visitantes","Visitantes por dia","sum"],["Pico","Pico de visitantes","sum"],["Vasos","Vasos","sum"],["Mictorios","Mictórios","sum"],["Lavatorios","Lavatórios","sum"],["Chuveiros","Chuveiros","sum"],["Leitos","Leitos","sum"],["Quartos","Quartos","sum"],["Hospedes","Hóspedes no mês","sum"],["Trocas","Trocas no mês","sum"],["Lixeiras","Lixeiras","sum"],["Dias","Dias de uso por semana","avg"],["Horas","Horas de uso por dia","avg"],["IUP","IUP","avg"],["IPS","IPS","avg"],["IHOS","IHOS","avg"],["CargaTecnica","Carga técnica relativa","sum"],["ValorMensal","Valor referencial (R$/mês)","sum"],["Equipe","Equipe equivalente (postos)","sum"],["HorasMes","Horas de serviço por mês","sum"]];
+const MEAS=[["AreaInterna","Área interna (m²)","sum"],["AreaExterna","Área externa (m²)","sum"],["A_varr","Varrição (m²)","sum"],["AreaSanitaria","Área sanitária (m²)","sum"],["Pessoas","Pessoas na equipe","sum"],["Visitantes","Visitantes por dia","sum"],["Pico","Pico de visitantes","sum"],["Vasos","Vasos","sum"],["Mictorios","Mictórios","sum"],["Lavatorios","Lavatórios","sum"],["Chuveiros","Chuveiros","sum"],["Leitos","Leitos","sum"],["Quartos","Quartos","sum"],["Hospedes","Hóspedes no mês","sum"],["Trocas","Trocas no mês","sum"],["Lixeiras","Lixeiras","sum"],["Dias","Dias de uso por semana","avg"],["Horas","Horas de uso por dia","avg"],["IUP","IUP","avg"],["IPS","IPS","avg"],["IHOS","IHOS","avg"],["CargaTecnica","Carga técnica relativa","sum"],["ValorMensal","Valor referencial (R$/mês)","sum"],["Equipe","Equipe equivalente (postos)","sum"],["HorasMes","Horas de serviço por mês","sum"]];
 const CATG=[["FaixaIUP","Faixa do IUP"],["ClasseSan","Classe sanitária"],["Modalidade","Modalidade indicada"],["Compartilhamento","Compartilhamento"],["FrequenciaExterna","Frequência externa"]];
-const MGROUPS=[["Áreas",["AreaInterna","AreaExterna","AreaSanitaria"]],["Uso e equipe",["Pessoas","Visitantes","Pico","Dias","Horas"]],["Sanitários",["Vasos","Mictorios","Lavatorios","Chuveiros"]],["Hospedagem",["Leitos","Quartos","Hospedes","Trocas"]],["Exterior",["Lixeiras"]],["Indicadores",["IUP","IPS","IHOS","CargaTecnica"]],["Valor e equipe estimada (CadTerc)",["ValorMensal","Equipe","HorasMes"]]];
+const MGROUPS=[["Áreas",["AreaInterna","AreaExterna","A_varr","AreaSanitaria"]],["Uso e equipe",["Pessoas","Visitantes","Pico","Dias","Horas"]],["Sanitários",["Vasos","Mictorios","Lavatorios","Chuveiros"]],["Hospedagem",["Leitos","Quartos","Hospedes","Trocas"]],["Exterior",["Lixeiras"]],["Indicadores",["IUP","IPS","IHOS","CargaTecnica"]],["Valor e equipe estimada (CadTerc)",["ValorMensal","Equipe","HorasMes"]]];
 function expInit(){if(!S.exp)S.exp={lvl:"uc",ger:new Set(),st:new Set(["Homologado"]),meas:new Set(["AreaInterna","AreaExterna","CargaTecnica"]),cats:new Set(),resp:false,items:new Set()}}
 const itemMeas=e=>ITEMS.filter(i=>e.items.has(i[0])).flatMap(i=>[["I:a:"+i[0],"Área · "+i[1]+" (m²)","sum"],["I:v:"+i[0],"R$/mês · "+i[1],"sum"]]);
 function expPreset(k){
@@ -21,7 +21,7 @@ function expRows(){
 const rnd=v=>v==null?null:Math.round(v*10000)/10000;
 function expBuild(){
   const e=S.exp,rows=expRows(),meas=[...MEAS.filter(m=>e.meas.has(m[0])),...itemMeas(e)],cats=CATG.filter(c=>e.cats.has(c[0]));
-  const val=(x,k)=>{let v;if(k==="ValorMensal")v=valorRec(x)?.total;else if(k==="Equipe")v=valorRec(x)?.eq;else if(k==="HorasMes")v=valorRec(x)?.hm;else if(k.startsWith("I:")){const[,t,ik]=k.split(":"),vv=valorRec(x);v=vv?vv.linhas.filter(l=>l.k===ik).reduce((a,l)=>a+(t==="a"?l.a:l.t),0):undefined}else v=x[k];return typeof v==="number"&&isFinite(v)?v:null};
+  const val=(x,k)=>{let v;if(k==="ValorMensal")v=valorRec(x)?.total;else if(k==="Equipe")v=valorRec(x)?.eq;else if(k==="HorasMes")v=valorRec(x)?.hm;else if(k.startsWith("I:")){const[,t,ik]=k.split(":"),vv=valorRec(x);v=vv?vv.linhas.filter(l=>l.k===ik).reduce((a,l)=>a+(t==="a"?l.a:l.t),0):undefined}else if(k==="AreaExterna")v=areaExt(x);else v=x[k];return typeof v==="number"&&isFinite(v)?v:null};
   let head,body;
   if(e.lvl==="est"){
     head=["Gerência","UC","Categoria","Estrutura","Uso principal",...(e.resp?["Responsável"]:[]),"Situação",...meas.map(m=>m[1]),...cats.map(c=>c[1])];
@@ -92,7 +92,7 @@ async function exportExpCsv(){
 async function exportCsv(){
   const cols=[...TXT.filter(k=>!["Observacoes","UCTipo","UCCadastro","Responsavel","Contato"].includes(k)),...NUM,...ITENS,"Observacoes","Status",...RES,"ValorMensal","VersaoRegra"];
   const q=v=>{if(v==null)return"";const s=typeof v==="number"?String(v).replace(".",","):String(v);return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
-  const csv="﻿"+cols.join(";")+"\n"+filtered().map(x=>cols.map(k=>q(x[k])).join(";")).join("\n");
+  const csv="﻿"+cols.join(";")+"\n"+filtered().map(x=>cols.map(k=>q(k==="AreaExterna"?areaExt(x):x[k])).join(";")).join("\n");
   try{downloadFile("diagnostico_limpeza_uc_"+new Date().toISOString().slice(0,10)+".csv",csv,"text/csv;charset=utf-8");toast("Arquivo salvo.")}
   catch(e){if(e&&e.code==="declined")return;toast("Exportação indisponível nesta visualização.")}
 }

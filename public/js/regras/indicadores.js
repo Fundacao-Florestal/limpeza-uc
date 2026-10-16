@@ -21,6 +21,7 @@ function check(r,recs,isEdit){
   if(FLAGS.some(k=>g(k)>1))err.push("Indicadores Sim/Não aceitam apenas 0 ou 1.");
   if(g("Pico")<g("Visitantes"))err.push("Pico não pode ser menor que a visitação normal.");
   if(g("AreaSanitaria")>g("AreaInterna"))err.push("Área sanitária não pode superar a área interna.");
+  if(r.A_varr==null||r.A_varr==="")blank.push("A_varr");
   if(g("Hospedaria")===1&&(g("Leitos")<=0||g("Quartos")<=0))err.push("Hospedaria exige leitos e quartos positivos.");
   if(g("Sanitario")===0&&DEP_SAN.some(k=>g(k)>0))err.push("Há dados sanitários sem sanitário informado.");
   if(g("Hospedaria")===0&&DEP_HOSP.some(k=>g(k)>0))err.push("Há dados de hospedagem sem hospedaria informada.");
@@ -51,11 +52,13 @@ function calc(r,p){
   const IPS=r.Sanitario===0?0:r.Publico*2+(v<=30?0:v<=300?1:2)+(pk<=100?0:pk<=800?1:2)+(r.HorasSan<=4?0:r.HorasSan<=8?1:2)+((r.Vasos+r.Mictorios)<=2?0:(r.Vasos+r.Mictorios)<=8?1:2)+r.Reposicao;
   const ClasseSan=r.Sanitario===0?"Não se aplica":r.Publico===0?"SAN-1":IPS<=5?"SAN-2":r.HorasSan<=8?"SAN-3":"SAN-4";
   const IH=r.Hospedaria===0?0:r.Hospedes/r.Leitos, IR=r.Hospedaria===0?0:r.Trocas/r.Quartos, IHOS=IH+IR;
-  const FrequenciaExterna=r.AreaExterna===0?"Não se aplica":(r.Residuos>=2||IUP>=7)?"Semanal":(r.Residuos===1||IUP>=4)?"Quinzenal":"Mensal";
-  const FatorExterno=r.AreaExterna===0?0:FrequenciaExterna==="Semanal"?1:FrequenciaExterna==="Quinzenal"?0.5:0.25;
+  /* Carga técnica: área externa e varrição juntas, como antes da separação no formulário. */
+  const ext=(areaExt(r)||0)+Math.max(0,Number(r.A_varr)||0);
+  const FrequenciaExterna=ext===0?"Não se aplica":(r.Residuos>=2||IUP>=7)?"Semanal":(r.Residuos===1||IUP>=4)?"Quinzenal":"Mensal";
+  const FatorExterno=ext===0?0:FrequenciaExterna==="Semanal"?1:FrequenciaExterna==="Quinzenal"?0.5:0.25;
   const cob=(IPS>=6||IUP>=7);
   const Modalidade=d===0?"Sem uso atual":cob?"Regular com cobertura":(r.AreaInterna<=p.PequenaArea&&d<=3)?"Volante":r.AreaInterna<=p.PequenaArea?"Compartilhado":"Regular";
   const Compartilhamento=d===0?"A avaliar":cob?"Baixo":r.AreaInterna<=p.PequenaArea?"Alto":"A avaliar";
-  const CargaTecnica=((r.AreaInterna/p.ProdInterna)*(d/7)+(r.AreaExterna/p.ProdExterna)*FatorExterno)*(1+IUP*p.PesoIUP+IPS*p.PesoIPS+IHOS*p.PesoIHOS);
+  const CargaTecnica=((r.AreaInterna/p.ProdInterna)*(d/7)+(ext/p.ProdExterna)*FatorExterno)*(1+IUP*p.PesoIUP+IPS*p.PesoIPS+IHOS*p.PesoIHOS);
   return{IUP,FaixaIUP,IPS,ClasseSan,IH,IR,IHOS,FrequenciaExterna,FatorExterno,Modalidade,Compartilhamento,CargaTecnica};
 }

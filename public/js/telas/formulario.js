@@ -1,7 +1,7 @@
 /* Formulário de preenchimento de uma estrutura, incluindo a escolha da UC e o nome automático da estrutura. */
 "use strict";
 
-function blankRec(){const r={};TXT.forEach(k=>r[k]="");NUM.forEach(k=>r[k]=null);ITENS.forEach(k=>r[k]=null);FLAGS.forEach(k=>r[k]=0);[...DEP_SAN,...DEP_HOSP,...DEP_VID].forEach(k=>{if(!FLAGS.includes(k))r[k]=0});r.Sazonalidade=null;r.Reposicao=0;r.Residuos=null;r.Gerencia="";r.Tipo="";r.UCCadastro="Notion";return r}
+function blankRec(){const r={};TXT.forEach(k=>r[k]="");NUM.forEach(k=>r[k]=null);ITENS.forEach(k=>r[k]=null);FLAGS.forEach(k=>r[k]=0);[...DEP_SAN,...DEP_HOSP,...DEP_VID].forEach(k=>{if(!FLAGS.includes(k))r[k]=0});r.Sazonalidade=null;r.Reposicao=0;r.Residuos=null;r.Gerencia="";r.Tipo="";r.VarrSep=1;r.UCCadastro="Notion";return r}
 function fNum(k,unit,opts={}){return `<label class="f" data-w="${k}"><span>${LBL[k]}${unit?` <small>(${unit})</small>`:""}</span><input type="number" inputmode="decimal" id="f_${k}" data-k="${k}" min="0" step="${opts.step||"any"}" ${opts.max!=null?`max="${opts.max}"`:""}></label>`}
 function fSel(k,opts){return `<label class="f" data-w="${k}">${LBL[k]}<select id="f_${k}" data-k="${k}" data-sel><option value="">Selecione</option>${opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join("")}</select></label>`}
 function fFlag(k){return `<div class="f" data-w="${k}"><span style="font-size:12.5px;font-weight:500;color:var(--ink2)">${LBL[k]}</span><div class="seg" role="group" aria-label="${LBL[k]}"><button type="button" data-flag="${k}" data-v="1" id="f_${k}_1">Sim</button><button type="button" data-flag="${k}" data-v="0" id="f_${k}_0">Não</button></div></div>`}
@@ -23,18 +23,24 @@ function vForm(m){
       <div class="soma" id="somaInt" aria-live="polite"></div>
       <p class="note dica"><b>Pisos frios:</b> paviflex, mármore, cerâmica, marmorite, plurigoma, madeira e similares; inclui os sanitários. <b>Almoxarifados/galpões:</b> depósito, estoque ou guarda de materiais. <b>Oficinas:</b> reparos e manutenção de equipamentos. <b>Saguão, hall e salão:</b> espaços livres com piso frio ou carpete.</p></div>
      <div class="grp"><h3>Área externa</h3>
-      <p class="sub">Distribua a área externa pelos tipos de serviço. A soma precisa bater com o total; informe 0 se não houver área externa.</p>
+      <p class="sub">Entorno da edificação e pátios. Varrição e vidros ficam à parte, logo abaixo. A soma precisa bater com o total; informe 0 se não houver área externa.</p>
       <div class="fields total">${fNum("AreaExterna","m² total")}</div>
-      <div class="fields">${fNum("A_pav","m²")}${fNum("A_varr","m²")}${fNum("A_patAlta","m²")}${fNum("A_patMedia","m²")}${fNum("A_patBaixa","m²")}</div>
+      <div class="fields">${fNum("A_pav","m²")}${fNum("A_patAlta","m²")}${fNum("A_patMedia","m²")}${fNum("A_patBaixa","m²")}</div>
       <div class="soma" id="somaExt" aria-live="polite"></div>
-      <p class="note dica"><b>Pisos pavimentados adjacentes:</b> áreas no entorno da edificação, revestidas de cimento, lajota, cerâmica. <b>Varrição:</b> estacionamentos (inclusive cobertos), passeios, alamedas e arruamentos. <b>Pátios e áreas verdes:</b> limpeza semanal (alta), quinzenal (média) ou mensal (baixa); inclui recolher papéis, detritos e folhas, mas não roçada, capina ou jardinagem.</p></div>
+      <p class="note dica"><b>Pisos pavimentados adjacentes:</b> áreas no entorno da edificação, revestidas de cimento, lajota, cerâmica. <b>Pátios e áreas verdes:</b> limpeza semanal (alta), quinzenal (média) ou mensal (baixa); inclui recolher papéis, detritos e folhas, mas não roçada, capina ou jardinagem.</p></div>
+     <div class="grp"><h3>Varrição</h3>
+      <p class="sub">Serviço à parte no CadTerc, fora da área externa. Informe 0 se não houver.</p>
+      <div class="fields total">${fNum("A_varr","m²")}</div>
+      <p class="note dica">Estacionamentos (inclusive cobertos), passeios, alamedas e arruamentos.</p></div>
      <div class="grp"><div class="grp-h"><h3>Vidros externos</h3>${fFlag("Vidros")}</div>
       <div id="sec_vid" class="fields" style="margin-top:12px">${fNum("A_vidro","m², uma face")}${fSel("VidroFreq",[[1,"Trimestral"],[2,"Semestral"]])}${fFlag("VidroRisco")}</div>
       <p class="note dica">Vidros das fachadas. Informe a área de uma face só. A face interna é limpa a cada quinze dias; a externa, na frequência escolhida. Com risco são os que exigem balancim ou andaime.</p></div></section>
    <section class="sec"><h2>Uso</h2><p class="sub">Rotina semanal, visitação e sazonalidade.</p><div class="fields">
      ${fNum("Dias","0 a 7",{max:7})}${fNum("Horas","0 a 24",{max:24})}${fNum("Pessoas","nº")}${fNum("Visitantes","por dia")}${fNum("Pico","por dia")}${fSel("Sazonalidade",[[0,"0 · Nenhuma"],[1,"1 · Eventual"],[2,"2 · Intensa"]])}</div></section>
    <section class="sec"><h2>Sanitários</h2><p class="sub">Informe os equipamentos somente se existirem.</p><div class="fields">${fFlag("Sanitario")}</div>
-     <div id="sec_san" class="fields" style="margin-top:12px">${fFlag("Publico")}${fNum("Vasos","nº")}${fNum("Mictorios","nº")}${fNum("Lavatorios","nº")}${fNum("Chuveiros","nº")}${fNum("AreaSanitaria","m², dentro dos pisos frios")}${fNum("HorasSan","0 a 24",{max:24})}${fSel("Reposicao",[[0,"0 · Rara"],[1,"1 · Às vezes"],[2,"2 · Frequente"]])}</div></section>
+     <div id="sec_san" style="margin-top:12px">
+     <div class="grp"><h3>Área sanitária</h3><p class="sub">Faz parte dos pisos frios da área interna.</p><div class="fields total">${fNum("AreaSanitaria","m²")}</div></div>
+     <div class="grp"><h3>Equipamentos e uso</h3><div class="fields">${fFlag("Publico")}${fNum("Vasos","nº")}${fNum("Mictorios","nº")}${fNum("Lavatorios","nº")}${fNum("Chuveiros","nº")}${fNum("HorasSan","0 a 24",{max:24})}${fSel("Reposicao",[[0,"0 · Rara"],[1,"1 · Às vezes"],[2,"2 · Frequente"]])}</div></div></div></section>
    <section class="sec"><h2>Hospedagem</h2><p class="sub">Leitos e quartos precisam ser positivos quando houver hospedaria.</p><div class="fields">${fFlag("Hospedaria")}</div>
      <div id="sec_hosp" class="fields" style="margin-top:12px">${fNum("Leitos","nº")}${fNum("Quartos","nº")}${fNum("Hospedes","no mês típico")}${fNum("Trocas","entradas no mês")}${fFlag("Lavanderia")}</div></section>
    <section class="sec"><h2>Exterior e particularidades</h2><div class="fields">${fSel("Residuos",[[0,"0 · Poucos"],[1,"1 · Fins de semana"],[2,"2 · Diários"],[3,"3 · Pico intenso"]])}${fNum("Lixeiras","nº")}
@@ -85,7 +91,7 @@ function setFlag(k,v){
 }
 function buildDoc(concl){
   const r=S.form,old=S.edit,now=new Date().toISOString(),me=S.me.id||"anon";
-  const doc={};TXT.forEach(k=>doc[k]=String(r[k]??"").trim());NUM.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));ITENS.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));
+  const doc={};TXT.forEach(k=>doc[k]=String(r[k]??"").trim());NUM.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));ITENS.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));doc.VarrSep=1;
   RES.forEach(k=>doc[k]=null);doc.ValorMensal=null;doc.ValorJSON=null;doc.VersaoRegra=null;doc.ParamsJSON=null;doc.MotivoDevolucao=null;
   doc.Exemplo=!!old?.Exemplo;doc.CriadoPor=old?.CriadoPor||me;doc.AtualizadoEm=now;
   let rev=old?.Revisao||1,para="Rascunho";

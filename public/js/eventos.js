@@ -32,10 +32,10 @@ document.addEventListener("click",e=>{
   else if(a==="trocaruc"){S.form.UC="";S.form.Gerencia="";S.form.Categoria="";S.form.UCTipo="";S.ucQ="";S.ucG="";renderUcBox();refreshCheck();const q=$("#ucQ");q&&q.focus()}
   else if(a==="ucmanual"){S.ucManual=true;S.form.UC="";S.form.Gerencia="";S.form.Categoria="";S.form.UCTipo="";S.form.UCCadastro="Manual";renderUcBox();refreshCheck()}
   else if(a==="ucvoltar"){S.ucManual=false;S.form.UC="";S.form.Gerencia="";S.form.Categoria="";S.form.UCTipo="";S.form.UCCadastro="Notion";renderUcBox();refreshCheck()}
-  else if(a==="dup"){const x=S.recs.find(r=>r.ID===t.dataset.id);if(!x)return;S.form={...blankRec(),...Object.fromEntries([...TXT,...NUM,...ITENS].map(k=>[k,x[k]??(NUMK(k)?null:"")]))};S.form.ID="";S.form.Observacoes="";S.form.Responsavel=S.me.name||S.form.Responsavel;S.form.Estrutura=x.Estrutura+" (cópia)";S.edit=null;S.ucManual=false;$("#dlg").close();go("form")}
+  else if(a==="dup"){const x=S.recs.find(r=>r.ID===t.dataset.id);if(!x)return;S.form={...blankRec(),...Object.fromEntries([...TXT,...NUM,...ITENS].map(k=>[k,x[k]??(NUMK(k)?null:"")]))};S.form.AreaExterna=areaExt(x);S.form.ID="";S.form.Observacoes="";S.form.Responsavel=S.me.name||S.form.Responsavel;S.form.Estrutura=x.Estrutura+" (cópia)";S.edit=null;S.ucManual=false;$("#dlg").close();go("form")}
   else if(a==="fechar")$("#dlg").close();
   else if(a==="outra"){$("#dlg").close();S.form=newForm();Object.assign(S.form,S._keep||{});S.ucManual=false;S.view="form";render();window.scrollTo({top:0})}
-  else if(a==="edit"){const x=S.recs.find(r=>r.ID===t.dataset.id);if(!x)return;S.form={...blankRec(),...Object.fromEntries([...TXT,...NUM,...ITENS].map(k=>[k,x[k]??(NUMK(k)?null:"")]))};S.edit=x;$("#dlg").close();go("form")}
+  else if(a==="edit"){const x=S.recs.find(r=>r.ID===t.dataset.id);if(!x)return;S.form={...blankRec(),...Object.fromEntries([...TXT,...NUM,...ITENS].map(k=>[k,x[k]??(NUMK(k)?null:"")]))};S.form.AreaExterna=areaExt(x);S.edit=x;$("#dlg").close();go("form")}
   else if(a==="validar")transition(t.dataset.id,"Validado","");
   else if(a==="devolver")transition(t.dataset.id,"Devolvido",$("#motivo")?.value||"");
   else if(a==="excluir"){const id=t.dataset.id;(async()=>{try{const x=S.recs.find(r=>r.ID===id);if(!x)return;await delRec(x);$("#dlg").close();toast("Rascunho excluído.");render()}catch(x){toast("Não foi possível excluir.")}})()}
