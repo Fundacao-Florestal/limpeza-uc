@@ -88,7 +88,9 @@ O perfil de cada pessoa fica em `acessos/<uid>`. As regras do Firestore aplicam 
 | Validador final (`validador`) | Estruturas aprovadas, homologadas ou devolvidas | Faz a validação final ou devolve; não altera o conteúdo |
 | Usuário final (`final`) | Só estruturas com validação final | Nada |
 
-Quem entra sem perfil vê apenas a tela de pedido de acesso. O e-mail não é confirmado: quem decide o acesso é o Administrador, ao atribuir o perfil. Como qualquer pessoa pode criar uma conta com um e-mail que não é dela (dentro dos domínios aceitos), confira com a pessoa por fora (Teams, telefone) antes de aprovar um pedido. Para voltar a exigir a confirmação de e-mail, veja o comentário em `signedIn()` no `firestore.rules`.
+Uma pessoa pode ter mais de um perfil, por exemplo Gestora de uma UC e Gerente da Gerência: ela vê e pode fazer o que cada um dos perfis libera (campo `Perfis`, uma lista; acessos antigos só com `Perfil` continuam valendo).
+
+Quem entra sem perfil vê apenas a tela de pedido de acesso, onde marca um ou mais papéis (Gestor de UC, Gerente, Validador final, Consulta ou Outro) e já escolhe as suas UCs e a sua Gerência. Na aba Acessos o Administrador vê o pedido completo e libera com **Aprovar**, ou usa **Ajustar** para mudar algo antes. O e-mail não é confirmado: quem decide o acesso é o Administrador, ao atribuir o perfil. Como qualquer pessoa pode criar uma conta com um e-mail que não é dela (dentro dos domínios aceitos), confira com a pessoa por fora (Teams, telefone) antes de aprovar um pedido. Para voltar a exigir a confirmação de e-mail, veja o comentário em `signedIn()` no `firestore.rules`.
 
 Coleções do Firestore: `estruturas/<ID>` (um documento por estrutura), `acessos/<uid>`, `pedidos/<uid>`, `usuarios/<uid>` (nome e e-mail de quem já entrou) e `config/valores`, `config/parametros`.
 
@@ -144,7 +146,7 @@ O endereço do site aparece no final (`https://<projeto>.web.app`).
 
 1. Abra o site, crie a sua conta. Vai aparecer a tela de pedido de acesso. (Se desligou a criação de contas, crie a sua em **Authentication > Users > Adicionar usuário**, e entre no site.)
 2. No console, em **Authentication > Users**, copie o UID da sua conta.
-3. Em **Firestore Database**, crie a coleção `acessos` com um documento cujo ID é esse UID e os campos `Uid` (string, o mesmo UID) e `Perfil` (string, `admin`).
+3. Em **Firestore Database**, crie a coleção `acessos` com um documento cujo ID é esse UID e os campos `Uid` (string, o mesmo UID) e `Perfis` (array com um item, a string `admin`).
 4. Recarregue o site. Daqui em diante os perfis são atribuídos pela aba **Acessos**.
 
 ### 7. Importar os dados da versão anterior

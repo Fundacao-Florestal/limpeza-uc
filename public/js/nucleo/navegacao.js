@@ -53,7 +53,7 @@ function render(){
   if(!S.started){
     S.started=true;
     const r=lerRota();
-    if(r.view)S.view=r.view;else if(perfil()==="gestor")S.view="minha";
+    if(r.view)S.view=r.view;else if(tem("gestor"))S.view="minha";
     if(r.id)S.pendingRec=r.id;
   }
   renderTabs();renderWho();
@@ -61,7 +61,7 @@ function render(){
   if(S.view==="minha")m.innerHTML=vMinha();
   else if(S.view==="painel")m.innerHTML=vPainel();
   else if(S.view==="exp")vExp(m);
-  else if(S.view==="acc"){m.innerHTML=vAcc();if(S.isAdmin&&S.db){names([...S.pedidos.map(p=>p.Uid),...S.accAll.map(a=>a.Uid)]).then(f=>{if(f&&S.view==="acc"&&!$("#dlg").open&&document.activeElement?.id!=="pSearch")$("#main").innerHTML=vAcc()})}}
+  else if(S.view==="acc"){m.innerHTML=vAcc();renderRqList();if(S.isAdmin&&S.db){names([...S.pedidos.map(p=>p.Uid),...S.accAll.map(a=>a.Uid)]).then(f=>{if(f&&S.view==="acc"&&!$("#dlg").open&&document.activeElement?.id!=="pSearch")$("#main").innerHTML=vAcc()})}}
   else if(S.view==="form")vForm(m);
   else if(S.view==="reg")m.innerHTML=vReg();
   else if(S.view==="par")m.innerHTML=vPar();

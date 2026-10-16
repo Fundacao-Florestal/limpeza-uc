@@ -2,7 +2,8 @@ rules_version = '2';
 
 // Regras do Limpeza UC. Elas são a trava real dos perfis: a interface só mostra o que estas regras liberam.
 //
-// Perfis (campo Perfil em acessos/<uid>):
+// Perfis (lista Perfis em acessos/<uid>; uma pessoa pode ter mais de um, ex.: gestor e gerente.
+// Acessos antigos têm só o campo Perfil, que vale como lista de um item):
 //   admin      tudo; atribui perfis e mantém parâmetros
 //   gestor     cria e edita só as estruturas que ele mesmo criou, nas UCs atribuídas (campo UCs)
 //   gerente    lê as estruturas das suas Gerências (campo Gerencias) e aprova ou devolve as que estão "Em validação"
@@ -35,11 +36,15 @@ service cloud.firestore {
     function acc() {
       return get(accPath()).data;
     }
-    function perfil() {
-      return hasAcc() ? acc().Perfil : null;
+    // Lista de perfis da pessoa; acesso antigo, só com Perfil, vale como lista de um item.
+    function perfis() {
+      return !hasAcc() ? [] : acc().get('Perfis', [acc().get('Perfil', '')]);
+    }
+    function tem(p) {
+      return p in perfis();
     }
     function isAdmin() {
-      return perfil() == 'admin';
+      return tem('admin');
     }
 
     match /config/{doc} {
@@ -64,11 +69,17 @@ service cloud.firestore {
     // Pedido de perfil feito por quem ainda não tem acesso.
     match /pedidos/{uid} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      // A pessoa marca um ou mais papéis; "outro" é só informativo. Nunca pode pedir "admin".
       allow create, update: if signedIn() && request.auth.uid == uid && !hasAcc()
-        && request.resource.data.keys().hasOnly(['Uid', 'Perfil', 'Obs', 'Em'])
+        && request.resource.data.keys().hasOnly(['Uid', 'Perfis', 'Perfil', 'UCs', 'Gerencias', 'Outro', 'Obs', 'Em'])
         && request.resource.data.Uid == uid
-        && request.resource.data.Perfil in ['gestor', 'gerente', 'validador', 'final']
-        && request.resource.data.Obs is string && request.resource.data.Obs.size() <= 400;
+        && request.resource.data.Perfis is list
+        && request.resource.data.Perfis.size() >= 1
+        && request.resource.data.Perfis.toSet().difference(['gestor', 'gerente', 'validador', 'final', 'outro'].toSet()).size() == 0
+        && request.resource.data.get('UCs', []) is list && request.resource.data.get('UCs', []).size() <= 200
+        && request.resource.data.get('Gerencias', []) is list && request.resource.data.get('Gerencias', []).size() <= 20
+        && request.resource.data.get('Outro', '') is string && request.resource.data.get('Outro', '').size() <= 200
+        && request.resource.data.get('Obs', '') is string && request.resource.data.get('Obs', '').size() <= 400;
       allow delete: if isAdmin();
     }
 
@@ -81,9 +92,9 @@ service cloud.firestore {
         return nxt().diff(cur()).affectedKeys().hasOnly(['Status', 'MotivoDevolucao', 'AtualizadoEm', 'Hist']);
       }
       function gestorDono() {
-        return perfil() == 'gestor'
+        return tem('gestor')
           && nxt().CriadoPor == request.auth.uid
-          && nxt().UC in acc().UCs;
+          && nxt().UC in acc().get('UCs', []);
       }
       // Gestor salva rascunho ou envia para aprovação; editar algo aprovado reabre o fluxo.
       function statusDoGestor() {
@@ -91,20 +102,20 @@ service cloud.firestore {
       }
 
       allow read: if isAdmin()
-        || (perfil() == 'gestor' && cur().CriadoPor == request.auth.uid)
-        || (perfil() == 'gerente' && cur().Gerencia in acc().Gerencias)
-        || (perfil() == 'validador' && cur().Status in ['Validado', 'Homologado', 'Devolvido'])
-        || (perfil() == 'final' && cur().Status == 'Homologado');
+        || (tem('gestor') && cur().CriadoPor == request.auth.uid)
+        || (tem('gerente') && cur().Gerencia in acc().get('Gerencias', []))
+        || (tem('validador') && cur().Status in ['Validado', 'Homologado', 'Devolvido'])
+        || (tem('final') && cur().Status == 'Homologado');
 
       allow create: if isAdmin()
         || (gestorDono() && nxt().ID is string && nxt().Status in ['Rascunho', 'Em validação']
             && nxt().get('Excluido', false) == false);
 
       allow update: if isAdmin()
-        || (gestorDono() && cur().CriadoPor == request.auth.uid && cur().UC in acc().UCs && statusDoGestor())
-        || (perfil() == 'gerente' && cur().Gerencia in acc().Gerencias
+        || (gestorDono() && cur().CriadoPor == request.auth.uid && cur().UC in acc().get('UCs', []) && statusDoGestor())
+        || (tem('gerente') && cur().Gerencia in acc().get('Gerencias', [])
             && cur().Status == 'Em validação' && nxt().Status in ['Validado', 'Devolvido'] && soAndamento())
-        || (perfil() == 'validador'
+        || (tem('validador')
             && cur().Status == 'Validado' && nxt().Status in ['Homologado', 'Devolvido'] && soAndamento());
 
       allow delete: if isAdmin();

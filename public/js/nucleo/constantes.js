@@ -2,6 +2,7 @@
 "use strict";
 
 const GER=["GIN","GIO","GIS","GLC","GLN","GLS","GM","GVPM","GVRAP"];
+const GER_NOMES={GIN:"Interior Norte",GIO:"Interior Oeste",GIS:"Interior Sul",GLC:"Litoral Centro",GLN:"Litoral Norte",GLS:"Litoral Sul",GM:"Metropolitana",GVPM:"Vale do Paraíba e Mantiqueira",GVRAP:"Vale do Ribeira e Alto Paranapanema"};
 const TIPOS=["Sede administrativa","Centro de visitantes","Base de fiscalização","Hospedaria / alojamento","Casa de funcionário","Sanitários públicos","Galpão / oficina","Outro uso"];
 const STATUS=["Rascunho","Em validação","Validado","Homologado","Devolvido"];
 const SL={"Em validação":"Em aprovação","Validado":"Aprovado pela Gerência","Homologado":"Validado final"};const sl=s=>SL[s]||s;

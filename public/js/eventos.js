@@ -13,7 +13,8 @@ document.addEventListener("click",e=>{
   if(t.dataset.est){toggle(S.exp.st,t.dataset.est);vExpRefresh();return}
   if(t.dataset.elvl){S.exp.lvl=t.dataset.elvl;vExpRefresh();return}
   if(t.dataset.epre){expPreset(t.dataset.epre);return}
-  if(t.dataset.asgp){S.asg.perfil=t.dataset.asgp;renderAsg();return}
+  if(t.dataset.asgp){toggle(S.asg.perfis,t.dataset.asgp);renderAsg();return}
+  if(t.dataset.rqp){if(!S.ped)S.ped=pedNovo(S.pedido);toggle(S.ped.perfis,t.dataset.rqp);render();return}
   if(t.dataset.asgg){UCS.filter(u=>u[2]===t.dataset.asgg).forEach(u=>S.asg.ucs.add(u[0]));renderAsgList();return}
   if(t.dataset.asgclear!==undefined){S.asg.ucs.clear();renderAsgList();return}
   if(t.dataset.psel){openAsg(t.dataset.psel);return}
@@ -22,7 +23,7 @@ document.addEventListener("click",e=>{
   else if(a==="filaH"){S.fSt="Validado";S.fGer="";go("reg")}
   else if(a==="homologar")transition(t.dataset.id,"Homologado","");
   else if(a==="novo"){S.form=newForm();S.edit=null;go("form")}
-  else if(a==="cancelar"){const was=!!S.edit;S.form=null;S.edit=null;go(was?(perfil()==="gestor"?"minha":"reg"):(perfil()==="gestor"?"minha":"painel"))}
+  else if(a==="cancelar"){const was=!!S.edit;S.form=null;S.edit=null;go(was?(tem("gestor")?"minha":"reg"):(tem("gestor")?"minha":"painel"))}
   else if(a==="rascunho")submit(false);
   else if(a==="concluir")submit(true);
   else if(a==="concluirmais")submit(true,true);
@@ -46,6 +47,9 @@ document.addEventListener("click",e=>{
   else if(a==="remover")removeAcc(t.dataset.uid);
   else if(a==="recusar")recusar(t.dataset.uid);
   else if(a==="solicitar")solicitar();
+  else if(a==="pedalterar"){S.pedEdit=true;S.ped=pedNovo(S.pedido);render()}
+  else if(a==="pedcancelar"){S.pedEdit=false;S.ped=null;render()}
+  else if(a==="aprovar")aprovarPedido(t.dataset.uid);
   else if(a==="copiarmsg"){const m=$("#rqMsg");try{navigator.clipboard.writeText(m.value).then(()=>toast("Mensagem copiada."),()=>{m.select();toast("Selecione e copie a mensagem.")})}catch{m.select();toast("Selecione e copie a mensagem.")}}
   else if(a==="xlsx")exportXlsx();
   else if(a==="ecsv")exportExpCsv();
@@ -56,6 +60,9 @@ document.addEventListener("input",e=>{
   if(el.id==="ucQ"){S.ucQ=el.value;renderUcList();return}
   if(el.id==="asgQ"){S.asg.q=el.value;renderAsgList();return}
   if(el.id==="pSearch"){psSearch(el.value);return}
+  if(S.ped&&el.id==="rqQ"){S.ped.q=el.value;renderRqList();return}
+  if(S.ped&&el.id==="rqOutro"){S.ped.outro=el.value;return}
+  if(S.ped&&el.id==="rqObs"){S.ped.obs=el.value;return}
   if(el.dataset&&el.dataset.k&&S.form){const k=el.dataset.k;
     if(el.max!==""&&el.value!==""&&Number(el.value)>Number(el.max))el.value=el.max;
     if(NUMK(k)){S.form[k]=el.value===""?null:Number(el.value)}else S.form[k]=el.value;
@@ -72,6 +79,8 @@ document.addEventListener("change",e=>{
   else if(el.id==="eResp"){S.exp.resp=el.checked;vExpRefresh()}
   else if(el.dataset&&el.dataset.asguc){toggle(S.asg.ucs,el.dataset.asguc,el.checked);const c=$("#asgCount");if(c)c.textContent=S.asg.ucs.size+" selecionada(s)"}
   else if(el.dataset&&el.dataset.asgger){toggle(S.asg.gers,el.dataset.asgger,el.checked)}
+  else if(S.ped&&el.dataset&&el.dataset.rquc){toggle(S.ped.ucs,el.dataset.rquc,el.checked);renderRqList()}
+  else if(S.ped&&el.dataset&&el.dataset.rqger){toggle(S.ped.gers,el.dataset.rqger,el.checked)}
   else if(el.id==="fDemo"){S.hideDemo=el.checked;render()}
   else if(el.id==="fGer"){S.fGer=el.value;render()}
   else if(el.id==="fSt"){S.fSt=el.value;render()}
