@@ -52,11 +52,12 @@ function fbSession(u){
   FB_SUBS.push(S.db.doc("config/parametros").onSnapshot(sn=>{if(sn.exists){const d=sn.data();S.params={...DEF,...d};S.paramsDoc=true}else{S.params={...DEF};S.paramsDoc=false}onData()},()=>{}));
   render();
 }
-/* Abre as leituras que o perfil permite. Cada consulta corresponde a uma regra de firestore.rules. */
+/* Abre as leituras que os perfis permitem. Cada consulta corresponde a uma regra de firestore.rules.
+   Com mais de um perfil (ex.: Gestor e Gerente), abre as leituras de cada um e junta os resultados. */
 function fbRole(){
-  const a=S.acc||{},p=a.Perfil||null;
-  S.isAdmin=S.isOwner=S.me.canEdit=(p==="admin");
-  const key=JSON.stringify([p,a.UCs||[],a.Gerencias||[]]);
+  const a=S.acc||{},ps=perfisDoc(a),tem_=p=>ps.includes(p);
+  S.isAdmin=S.isOwner=S.me.canEdit=tem_("admin");
+  const key=JSON.stringify([ps,a.UCs||[],a.Gerencias||[]]);
   if(key===FB_ROLE_KEY){onData();return}
   FB_ROLE_KEY=key;fbStop(FB_ROLE_SUBS);S.recs=[];S.accAll=[];S.pedidos=[];S.usersAll=[];
   if(!S.isAdmin)S.viewAs="";
@@ -67,12 +68,14 @@ function fbRole(){
     const m=new Map();parts.forEach(arr=>arr.forEach(x=>{if(x&&x.ID&&!x.Excluido)m.set(x.ID,x)}));
     S.recs=[...m.values()];setSync(true,"Base conectada");onData();
   },errR));
-  if(p==="admin")watch(col,"todos");
-  else if(p==="gerente")(a.Gerencias||[]).forEach((g,i)=>watch(col.where("Gerencia","==",g),"g"+i));
-  else if(p==="validador")ST_VALIDADOR.forEach((st,i)=>watch(col.where("Status","==",st),"v"+i));
-  else if(p==="final")watch(col.where("Status","==","Homologado"),"f");
-  else if(p==="gestor")watch(col.where("CriadoPor","==",S.me.id),"o");
-  if(p==="admin"){
+  if(tem_("admin"))watch(col,"todos");
+  else{
+    if(tem_("gestor"))watch(col.where("CriadoPor","==",S.me.id),"o");
+    if(tem_("gerente"))(a.Gerencias||[]).forEach((g,i)=>watch(col.where("Gerencia","==",g),"g"+i));
+    if(tem_("validador"))ST_VALIDADOR.forEach((st,i)=>watch(col.where("Status","==",st),"v"+i));
+    else if(tem_("final"))watch(col.where("Status","==","Homologado"),"f");
+  }
+  if(tem_("admin")){
     FB_ROLE_SUBS.push(S.db.collection("acessos").onSnapshot(sn=>{S.accAll=sn.docs.map(d=>d.data());onData()},()=>{}));
     FB_ROLE_SUBS.push(S.db.collection("pedidos").onSnapshot(sn=>{S.pedidos=sn.docs.map(d=>d.data());onData()},()=>{}));
     FB_ROLE_SUBS.push(S.db.collection("usuarios").onSnapshot(sn=>{S.usersAll=sn.docs.map(d=>d.data());S.usersAll.forEach(x=>{S.names[x.Uid]=x.Nome||x.Email||"Usuário"});onData()},()=>{}));

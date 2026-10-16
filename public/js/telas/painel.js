@@ -34,8 +34,8 @@ function vPainel(){
   const pend=all.filter(x=>x.Status==="Devolvido"||x.Status==="Rascunho").sort((a,b)=>(b.AtualizadoEm||"").localeCompare(a.AtualizadoEm||"")).slice(0,8);
   const fila=S.recs.filter(canApprove).length;
   const filaH=S.recs.filter(canHomolog).length;
-  const bn2=filaH&&(perfil()==="validador"||perfil()==="admin")?`<div class="banner" style="background:var(--info-soft);color:var(--info)"><b>${filaH}</b> estrutura(s) aprovada(s) pela Gerência aguardando validação final. <button class="btn sm" data-act="filaH">Abrir fila</button></div>`:"";
-  const bn=fila&&(perfil()==="gerente"||perfil()==="admin")?`<div class="banner" style="background:var(--info-soft);color:var(--info)"><b>${fila}</b> estrutura(s) aguardando aprovação. <button class="btn sm" data-act="fila">Abrir fila</button></div>`:"";
+  const bn2=filaH&&(tem("validador")||tem("admin"))?`<div class="banner" style="background:var(--info-soft);color:var(--info)"><b>${filaH}</b> estrutura(s) aprovada(s) pela Gerência aguardando validação final. <button class="btn sm" data-act="filaH">Abrir fila</button></div>`:"";
+  const bn=fila&&(tem("gerente")||tem("admin"))?`<div class="banner" style="background:var(--info-soft);color:var(--info)"><b>${fila}</b> estrutura(s) aguardando aprovação. <button class="btn sm" data-act="fila">Abrir fila</button></div>`:"";
   return filtersBar()+bn+bn2+kp+`
   <div class="grid g2">
     <section class="panel"><h2>Andamento do preenchimento</h2><p class="sub">Situação de todas as estruturas do filtro</p>${stk}<p class="note">Só entram nos indicadores as estruturas concluídas (com resultado calculado).</p></section>

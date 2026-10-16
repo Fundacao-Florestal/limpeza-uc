@@ -15,7 +15,7 @@ function expPreset(k){
   vExpRefresh();
 }
 function expRows(){
-  const e=S.exp,fin=perfil()==="final";
+  const e=S.exp,fin=soPerfil("final");
   return S.recs.filter(x=>inScope(x)&&(!e.ger.size||e.ger.has(x.Gerencia))&&(fin||!e.st.size||e.st.has(x.Status))&&!(S.hideDemo&&x.Exemplo));
 }
 const rnd=v=>v==null?null:Math.round(v*10000)/10000;
@@ -41,12 +41,12 @@ function expBuild(){
 function expPreview(){
   const box=$("#expPrev");if(!box||!S.exp)return;
   const{head,body}=expBuild(),fmt=v=>v==null||v===""?"":typeof v==="number"?Number(v).toLocaleString("pt-BR",{maximumFractionDigits:2}):esc(v);
-  box.innerHTML=`<p class="note" style="margin:0 0 8px"><b>${f0(body.length)}</b> linha(s) · ${head.length} coluna(s)${body.length>10?" · mostrando as 10 primeiras":""}</p>`+(body.length?`<div class="tw"><table><thead><tr>${head.map((c,i)=>`<th class="${i>=head.length-(head.length)&&false?"n":""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${body.slice(0,10).map(r=>`<tr>${r.map(v=>`<td class="${typeof v==="number"?"n":""}">${fmt(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:`<div class="empty">Nenhum diagnóstico com estes critérios.${perfil()==="final"?" Só entram diagnósticos com validação final.":""}</div>`);
+  box.innerHTML=`<p class="note" style="margin:0 0 8px"><b>${f0(body.length)}</b> linha(s) · ${head.length} coluna(s)${body.length>10?" · mostrando as 10 primeiras":""}</p>`+(body.length?`<div class="tw"><table><thead><tr>${head.map((c,i)=>`<th class="${i>=head.length-(head.length)&&false?"n":""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${body.slice(0,10).map(r=>`<tr>${r.map(v=>`<td class="${typeof v==="number"?"n":""}">${fmt(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:`<div class="empty">Nenhum diagnóstico com estes critérios.${soPerfil("final")?" Só entram diagnósticos com validação final.":""}</div>`);
   const b=[$("#bXlsx"),$("#bECsv")];b.forEach(x=>x&&(x.disabled=!body.length));
 }
 function vExpRefresh(){const m=$("#main");vExp(m)}
 function vExp(m){
-  expInit();const e=S.exp,fin=perfil()==="final",est=e.lvl==="est";
+  expInit();const e=S.exp,fin=soPerfil("final"),est=e.lvl==="est";
   m.innerHTML=`<div class="bar"><h2 style="font-size:20px">Exportar para Excel</h2><span class="sp"></span><span class="note" style="margin:0">Atalhos:</span><button class="btn sm" data-epre="ger">Resumo por Gerência</button><button class="btn sm" data-epre="uc">Resumo por UC</button><button class="btn sm" data-epre="est">Tudo por estrutura</button><button class="btn sm" data-epre="anexo">Modelo Anexo II (por UC)</button></div>
   <div>
    <section class="sec"><h2>1. Nível da tabela</h2><p class="sub">Cada linha representa:</p><div class="seg" role="group" aria-label="Nível">${[["est","Estrutura"],["uc","UC"],["ger","Gerência"]].map(([k,t])=>`<button type="button" data-elvl="${k}" aria-pressed="${e.lvl===k}">${t}</button>`).join("")}</div>
@@ -78,7 +78,7 @@ async function exportXlsx(){
   const e=S.exp,wb=X.utils.book_new(),ws=X.utils.aoa_to_sheet([head,...body]);
   ws["!cols"]=head.map((c,i)=>({wch:Math.min(42,Math.max(10,c.length+2,...body.slice(0,60).map(r=>String(r[i]??"").length+2)))}));
   X.utils.book_append_sheet(wb,ws,"Dados");
-  const crit=[["Limpeza das UCs · exportação"],["Gerado em",new Date().toLocaleString("pt-BR")],["Gerado por",S.me.name||""],["Perfil",PERFIS[perfil()]||""],["Nível",{est:"Estrutura",uc:"UC",ger:"Gerência"}[e.lvl]],["Gerências",e.ger.size?[...e.ger].join(", "):"Todas"],["Situação",perfil()==="final"?"Validado final":(e.st.size?[...e.st].map(sl).join(", "):"Todas")],["Linhas",body.length],["Versão da regra",S.params.VersaoRegra],["Cadastro de UCs","Notion (Áreas protegidas), sincronizado em "+SYNC],["Tabela de valores",S.val.Versao],["Regime de licitação",S.val.Regime==="ampla"?"Participação ampla":"Participação restrita a ME/EPP"],["Fator de reajuste",S.val.Fator],["Observação","Valor referencial = área × valor unitário do CadTerc Vol. 03 por tipo de serviço; é estimativa, não preço contratado. Carga técnica é índice comparativo, não é nº de postos nem preço. Somas e médias ignoram campos vazios."]];
+  const crit=[["Limpeza das UCs · exportação"],["Gerado em",new Date().toLocaleString("pt-BR")],["Gerado por",S.me.name||""],["Perfil",nomesPerfis()],["Nível",{est:"Estrutura",uc:"UC",ger:"Gerência"}[e.lvl]],["Gerências",e.ger.size?[...e.ger].join(", "):"Todas"],["Situação",soPerfil("final")?"Validado final":(e.st.size?[...e.st].map(sl).join(", "):"Todas")],["Linhas",body.length],["Versão da regra",S.params.VersaoRegra],["Cadastro de UCs","Notion (Áreas protegidas), sincronizado em "+SYNC],["Tabela de valores",S.val.Versao],["Regime de licitação",S.val.Regime==="ampla"?"Participação ampla":"Participação restrita a ME/EPP"],["Fator de reajuste",S.val.Fator],["Observação","Valor referencial = área × valor unitário do CadTerc Vol. 03 por tipo de serviço; é estimativa, não preço contratado. Carga técnica é índice comparativo, não é nº de postos nem preço. Somas e médias ignoram campos vazios."]];
   X.utils.book_append_sheet(wb,X.utils.aoa_to_sheet(crit),"Critérios");
   const out=X.write(wb,{bookType:"xlsx",type:"array"});
   await saveFile(expName("xlsx"),new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));

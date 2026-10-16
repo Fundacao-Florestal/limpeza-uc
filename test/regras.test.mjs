@@ -20,6 +20,9 @@ const ACESSOS = {
   gerS: { Uid: "gerS", Perfil: "gerente", Gerencias: ["GLS"] },
   val: { Uid: "val", Perfil: "validador" },
   fin: { Uid: "fin", Perfil: "final" },
+  // Formato novo: lista de perfis. Gestor de PE Cantareira (GLN) e Gerente da GLS ao mesmo tempo.
+  duplo: { Uid: "duplo", Perfis: ["gerente", "gestor"], Perfil: "gerente", UCs: ["PE Cantareira"], Gerencias: ["GLS"] },
+  adm2: { Uid: "adm2", Perfis: ["admin"], Perfil: "admin", UCs: [], Gerencias: [] },
 };
 
 const base = (o = {}) => ({
@@ -60,7 +63,7 @@ test("sem login não lê nada", async () => {
 test("e-mail não confirmado entra, mas sem perfil só pede acesso", async () => {
   await seed("e1", base());
   await assertSucceeds(setDoc(doc(db("novo", false), "usuarios", "novo"), { Uid: "novo", Nome: "N", Email: "n@x", UltimoAcesso: "x" }));
-  await assertSucceeds(setDoc(doc(db("novo", false), "pedidos", "novo"), { Uid: "novo", Perfil: "gestor", Obs: "", Em: "x" }));
+  await assertSucceeds(setDoc(doc(db("novo", false), "pedidos", "novo"), { Uid: "novo", Perfis: ["gestor"], UCs: ["PE Cantareira"], Obs: "", Em: "x" }));
   await assertSucceeds(getDoc(doc(db("novo", false), "config", "valores")));
   await assertFails(getDoc(doc(db("novo", false), "estruturas", "e1")));
   await assertFails(getDocs(collection(db("novo", false), "estruturas")));
@@ -144,13 +147,42 @@ test("perfis: só o admin atribui; cada um lê o próprio acesso", async () => {
 });
 
 test("pedido de acesso: só quem não tem perfil, só para si", async () => {
-  const p = { Uid: "novo", Perfil: "gestor", Obs: "PE Cantareira", Em: "2026-10-14" };
+  const p = { Uid: "novo", Perfis: ["gestor"], Perfil: "gestor", UCs: ["PE Cantareira"], Gerencias: [], Outro: "", Obs: "", Em: "2026-10-14" };
   await assertSucceeds(setDoc(doc(db("novo"), "pedidos", "novo"), p));
   await assertFails(setDoc(doc(db("novo"), "pedidos", "outro"), { ...p, Uid: "outro" }));
-  await assertFails(setDoc(doc(db("novo2"), "pedidos", "novo2"), { ...p, Uid: "novo2", Perfil: "admin" }));
   await assertFails(setDoc(doc(db("gest"), "pedidos", "gest"), { ...p, Uid: "gest" }));
   await assertFails(getDocs(collection(db("novo"), "pedidos")));
   await assertSucceeds(getDocs(collection(db("adm"), "pedidos")));
+});
+
+test("pedido de acesso: um ou mais papéis, nunca admin", async () => {
+  const p = (uid, extra) => ({ Uid: uid, Perfis: ["gestor"], Perfil: "gestor", UCs: [], Gerencias: [], Outro: "", Obs: "", Em: "x", ...extra });
+  await assertSucceeds(setDoc(doc(db("n1"), "pedidos", "n1"), p("n1", { Perfis: ["gestor", "gerente"], UCs: ["PE Cantareira"], Gerencias: ["GLN"] })));
+  await assertSucceeds(setDoc(doc(db("n2"), "pedidos", "n2"), p("n2", { Perfis: ["outro"], Perfil: "outro", Outro: "Fiscal do contrato" })));
+  await assertFails(setDoc(doc(db("n3"), "pedidos", "n3"), p("n3", { Perfis: ["admin"], Perfil: "admin" })));
+  await assertFails(setDoc(doc(db("n4"), "pedidos", "n4"), p("n4", { Perfis: ["gestor", "admin"] })));
+  await assertFails(setDoc(doc(db("n5"), "pedidos", "n5"), p("n5", { Perfis: [] })));
+  await assertFails(setDoc(doc(db("n6"), "pedidos", "n6"), p("n6", { Acesso: "total" })));
+  await assertFails(setDoc(doc(db("n7"), "pedidos", "n7"), p("n7", { Outro: "x".repeat(201) })));
+});
+
+test("pessoa com dois perfis (gestor e gerente) tem a soma dos dois", async () => {
+  await seed("propria", base({ ID: "P", CriadoPor: "duplo" }));
+  await seed("gls", base({ ID: "S", Gerencia: "GLS", Status: "Em validação" }));
+  await seed("gln", base({ ID: "N", Gerencia: "GLN", Status: "Em validação" }));
+  await assertSucceeds(setDoc(doc(db("duplo"), "estruturas", "nova"), base({ ID: "NOVA", CriadoPor: "duplo" })));
+  await assertSucceeds(getDocs(query(collection(db("duplo"), "estruturas"), where("CriadoPor", "==", "duplo"))));
+  await assertSucceeds(getDocs(query(collection(db("duplo"), "estruturas"), where("Gerencia", "==", "GLS"))));
+  await assertFails(getDoc(doc(db("duplo"), "estruturas", "gln")));
+  await assertSucceeds(updateDoc(doc(db("duplo"), "estruturas", "gls"), { Status: "Validado" }));
+  await assertFails(updateDoc(doc(db("duplo"), "estruturas", "gln"), { Status: "Validado" }));
+  await assertFails(setDoc(doc(db("duplo"), "estruturas", "outra"), base({ ID: "O", UC: "PE Jaraguá", CriadoPor: "duplo" })));
+});
+
+test("administrador no formato novo (lista de perfis) continua administrador", async () => {
+  await seed("e1", base());
+  await assertSucceeds(getDocs(collection(db("adm2"), "estruturas")));
+  await assertSucceeds(setDoc(doc(db("adm2"), "acessos", "x"), { Uid: "x", Perfis: ["final"], Perfil: "final" }));
 });
 
 test("parâmetros e tabela: todos leem, só o admin grava", async () => {

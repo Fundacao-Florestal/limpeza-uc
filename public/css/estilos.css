@@ -165,3 +165,13 @@ input[type=email],input[type=password]{background:var(--surface);border:1px soli
 .soma.ok{color:var(--ok)}
 .soma.bad{color:var(--crit)}
 @media (max-width:560px){.grp-h{grid-template-columns:1fr}.grp-h h3{margin:0}}
+
+/* Pedido de acesso: cartões de papel (pode marcar mais de um) */
+.papeis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:4px 0 6px}
+.papel{display:flex;flex-direction:column;gap:4px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:12px 14px;cursor:pointer;color:var(--ink)}
+.papel span{font-size:12.5px;color:var(--ink2)}
+.papel:hover{border-color:var(--ink2)}
+.papel[aria-pressed="true"]{border-color:var(--pri);background:var(--pri-soft);box-shadow:inset 0 0 0 1px var(--pri)}
+.papel[aria-pressed="true"] b::before{content:"✓ ";color:var(--pri)}
+.grp h3{font-size:14.5px;margin:0 0 4px}
+.lst li .bar{flex-wrap:wrap}

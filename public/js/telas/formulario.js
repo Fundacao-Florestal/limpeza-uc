@@ -98,7 +98,7 @@ function buildDoc(concl){
 }
 async function submit(concl,again){
   const r=S.form,c=check(r,S.recs,!!S.edit);
-  if(perfil()==="gestor"&&!tester()&&r.UC&&!myUCs().has(r.UC)){toast("A UC selecionada não está atribuída ao seu perfil.");return}
+  if(tem("gestor")&&!tester()&&r.UC&&!myUCs().has(r.UC)){toast("A UC selecionada não está atribuída ao seu perfil.");return}
   if(concl&&(c.blank.length||c.err.length)){toast("Corrija as pendências da conferência.");return}
   if(!concl&&(!String(r.UC).trim()||!String(r.Estrutura).trim())){toast("Informe ao menos a UC e o nome da estrutura para salvar o rascunho.");return}
   if(!concl&&S.recs.some(x=>x.ID!==r.ID&&x.UC===r.UC&&norm(x.Estrutura)===norm(r.Estrutura))){toast("Já existe uma estrutura com este nome nesta UC.");return}
@@ -106,12 +106,12 @@ async function submit(concl,again){
   try{if(!String(r.ID||"").trim())r.ID=await freshId(r);const doc=buildDoc(concl);await saveRec(doc);const keep={UC:r.UC,Gerencia:r.Gerencia,Categoria:r.Categoria,UCTipo:r.UCTipo,UCCadastro:r.UCCadastro,Responsavel:r.Responsavel,Contato:r.Contato};
     S.edit=null;S.saving=false;S._keep=keep;
     if(again){S.form=newForm();Object.assign(S.form,keep);S.ucManual=false;S.view="form";render();window.scrollTo({top:0});toast("Envio registrado (protocolo "+doc.ID+"). Cadastre a próxima estrutura de "+keep.UC+".")}
-    else if(concl){S.form=null;S.view=perfil()==="gestor"?"minha":"reg";render();confirmDlg(doc)}
-    else{toast("Rascunho salvo.");S.form=null;S.view=perfil()==="gestor"?"minha":"reg";render()}}
+    else if(concl){S.form=null;S.view=tem("gestor")?"minha":"reg";render();confirmDlg(doc)}
+    else{toast("Rascunho salvo.");S.form=null;S.view=tem("gestor")?"minha":"reg";render()}}
   catch(e){S.saving=false;refreshCheck();toast("Não foi possível gravar: "+(e.message||e.code||"erro"))}
 }
 function confirmDlg(d){
-  const priv=perfil()==="gestor"?"Seu envio fica visível apenas para você e para quem analisa os diagnósticos. Outros participantes não têm acesso a ele.":"O envio foi gravado na base compartilhada.";
+  const priv=tem("gestor")?"Seu envio fica visível apenas para você e para quem analisa os diagnósticos. Outros participantes não têm acesso a ele.":"O envio foi gravado na base compartilhada.";
   $("#dlgBody").innerHTML=`<div role="status"><h2 style="color:var(--ok)">Envio registrado com sucesso</h2>
   <p style="margin:8px 0 0">A estrutura <b>${esc(d.Estrutura)}</b> de <b>${esc(d.UC)}</b> foi enviada para aprovação do Gerente da Gerência ${esc(d.Gerencia)}.</p>
   <div class="kv"><div><span>Protocolo</span><b>${esc(d.ID)}</b></div><div><span>Enviado em</span><b>${fdt(d.AtualizadoEm)}</b></div><div><span>Responsável</span><b>${esc(d.Responsavel||"—")}</b></div><div><span>Situação</span><b>${esc(sl(d.Status))}</b></div></div>
@@ -126,7 +126,7 @@ function applyUc(r,name){
 }
 function newForm(){const r=blankRec();r.Responsavel=S.me.name||"";
   try{const u=localStorage.getItem("lastUC");if(u&&myUCs().has(u))applyUc(r,u)}catch{}
-  if(!r.UC&&perfil()==="gestor"&&myUCs().size===1)applyUc(r,[...myUCs()][0]);
+  if(!r.UC&&tem("gestor")&&myUCs().size===1)applyUc(r,[...myUCs()][0]);
   S.ucQ="";S.ucG="";S.ucManual=false;S.autoName="";return r}
 function ucPool(){const s=myUCs();return UCS.map((u,i)=>[u,i]).filter(([u])=>s.has(u[0]))}
 function ucMatches(q){
@@ -152,7 +152,7 @@ function renderUcBox(){
   b.innerHTML=`<label class="f">Filtrar a relação<input type="text" id="ucQ" placeholder="Digite parte do nome ou a sigla (ex.: PE Cantareira)" autocomplete="off" value="${esc(S.ucQ)}"></label>
   ${gs.length>1?`<div class="chips sm" role="group" aria-label="Gerência"><button type="button" data-ucg="" aria-pressed="${!S.ucG}">Todas</button>${gs.map(g=>`<button type="button" data-ucg="${g}" aria-pressed="${S.ucG===g}">${g}</button>`).join("")}</div>`:""}
   <div class="note" id="ucCount" style="margin:0"></div><div class="ucl" id="ucList" role="listbox"></div>
-  ${perfil()==="admin"?`<button type="button" class="btn sm" data-act="ucmanual" style="width:max-content">Área fora da relação: cadastrar manualmente</button>`:`<p class="note" style="margin:0">Área fora da relação? Solicite ao administrador a inclusão no cadastro.</p>`}`;
+  ${tem("admin")?`<button type="button" class="btn sm" data-act="ucmanual" style="width:max-content">Área fora da relação: cadastrar manualmente</button>`:`<p class="note" style="margin:0">Área fora da relação? Solicite ao administrador a inclusão no cadastro.</p>`}`;
   renderUcList();
 }
 function pickUc(i){

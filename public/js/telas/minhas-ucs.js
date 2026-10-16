@@ -15,7 +15,7 @@ function resumoUCs(ucs){
   return `<section class="panel" style="margin-bottom:14px"><h2 style="font-size:18px">Resumo das minhas UCs</h2><p class="sub">${ucs.length} UC(s). Valor, equipe e tempo estimados a partir das áreas informadas.</p>${kpiStrip(ucSum(rs))}</section>`;
 }
 function vMinha(){
-  let ucs=perfil()==="gestor"&&!tester()?[...myUCs()]:[...new Set(S.recs.filter(inScope).map(x=>x.UC))];
+  let ucs=tem("gestor")&&!tester()?[...myUCs()]:[...new Set(S.recs.filter(inScope).map(x=>x.UC))];
   ucs.sort((a,b)=>a.localeCompare(b));
   if(!ucs.length)return `<div class="panel empty">Nenhuma UC atribuída ao seu perfil. Solicite a atribuição ao administrador.</div>`;
   return `<p class="note" style="margin:0 0 12px">Cada UC pode ter várias estruturas. Use <b>Adicionar estrutura</b> para cadastrar a próxima; no formulário, <b>Enviar e cadastrar outra</b> mantém a mesma UC.</p>`+resumoUCs(ucs)+ucs.map(uc=>{
