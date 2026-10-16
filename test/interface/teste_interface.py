@@ -328,6 +328,15 @@ with sync_playwright() as p:
     page.keyboard.press("Escape")
     page.wait_for_timeout(200)
 
+    # Acesso liberado enquanto a pessoa está na tela de pedido: a página dela atualiza sozinha
+    logout(page)
+    login(page, "uEsp", "Pessoa Esperando")
+    page.wait_for_timeout(300)
+    check("sem perfil fica na tela de pedido", page.is_visible("text=Solicitar acesso"))
+    page.evaluate("__mock.seed('acessos/uEsp',{Uid:'uEsp',Perfis:['gestor'],Perfil:'gestor',UCs:['PE Cantareira'],Gerencias:[]})")
+    page.wait_for_timeout(400)
+    check("aprovação chega sem recarregar: vai para Minhas UCs e avisa", page.evaluate("S.view") == "minha" and "Minhas UCs" in page.inner_text("#tabs") and "acesso foi liberado" in page.inner_text("#toast") and "minhas-ucs" in page.evaluate("location.hash"))
+
     # Domínio não autorizado
     logout(page)
     page.evaluate("window.ALLOWED_EMAIL_DOMAINS=['fflorestal.sp.gov.br']")

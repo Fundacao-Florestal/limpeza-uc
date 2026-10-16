@@ -59,6 +59,8 @@ function fbRole(){
   S.isAdmin=S.isOwner=S.me.canEdit=tem_("admin");
   const key=JSON.stringify([ps,a.UCs||[],a.Gerencias||[]]);
   if(key===FB_ROLE_KEY){onData();return}
+  /* Acesso liberado com a pessoa na tela de pedido: leva para a aba inicial do perfil e avisa. */
+  if(FB_ROLE_KEY&&JSON.parse(FB_ROLE_KEY)[0].length===0&&ps.length){S.view=ps.includes("gestor")?"minha":"painel";S._push=true;toast("Seu acesso foi liberado: "+ps.map(p=>PERFIS[p]||p).join(" + "))}
   FB_ROLE_KEY=key;fbStop(FB_ROLE_SUBS);S.recs=[];S.accAll=[];S.pedidos=[];S.usersAll=[];
   if(!S.isAdmin)S.viewAs="";
   const col=S.db.collection("estruturas"),parts=new Map();
