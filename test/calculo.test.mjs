@@ -12,11 +12,11 @@ for (const f of ["nucleo/util", "nucleo/constantes", "dados/ucs", "regras/valor-
 }
 const { check, calc, valorar, VDEF, DEF } = vm.runInContext("({check,calc,valorar,VDEF,DEF})", ctx);
 
-// Estrutura completa e consistente: 1.000 m² internos (900 frio + 100 saguão), 2.000 m² externos.
+// Estrutura completa e consistente: 1.000 m² internos (900 frio + 100 saguão), 500 m² externos e 1.500 m² de varrição à parte.
 const base = () => ({
   UC: "APA BANHADO", Gerencia: "GVPM", Estrutura: "Sede", Tipo: "Sede administrativa", Responsavel: "Ana", Categoria: "Estação Ecológica",
   AreaInterna: 1000, A_frio: 900, A_acarp: 0, A_lab: 0, A_almox: 0, A_ofic: 0, A_saguao: 100,
-  AreaExterna: 2000, A_pav: 500, A_varr: 1500, A_patAlta: 0, A_patMedia: 0, A_patBaixa: 0,
+  AreaExterna: 500, A_pav: 500, A_varr: 1500, VarrSep: 1, A_patAlta: 0, A_patMedia: 0, A_patBaixa: 0,
   Dias: 5, Horas: 8, Pessoas: 2, Visitantes: 0, Pico: 0, Sazonalidade: 0,
   Sanitario: 0, Publico: 0, Vasos: 0, Mictorios: 0, Lavatorios: 0, Chuveiros: 0, AreaSanitaria: 0, HorasSan: 0, Reposicao: 0,
   Hospedaria: 0, Leitos: 0, Quartos: 0, Hospedes: 0, Trocas: 0, Lavanderia: 0, Residuos: 0, Lixeiras: 0,
@@ -45,9 +45,28 @@ test("detalhamento interno maior que o total também é barrado", () => {
 });
 
 test("detalhamento externo tem de bater com a área externa", () => {
-  const e = erros({ ...base(), A_varr: 1000 }).err.find((t) => t.startsWith("Áreas externas"));
-  assert.match(e, /Faltam 500 m²/);
+  const e = erros({ ...base(), A_pav: 300 }).err.find((t) => t.startsWith("Áreas externas"));
+  assert.match(e, /Faltam 200 m²/);
   assert.equal(erros({ ...base(), AreaExterna: 0, A_pav: 0, A_varr: 0 }).err.length, 0);
+});
+
+test("varrição fica fora da soma da área externa e é obrigatória", () => {
+  assert.equal(erros({ ...base(), A_varr: 9000 }).err.length, 0);
+  assert.ok(erros({ ...base(), A_varr: null }).blank.includes("A_varr"));
+});
+
+test("varrição não entra no limite de 750 m² das pequenas áreas", () => {
+  const r = { ...base(), AreaInterna: 400, A_frio: 400, A_saguao: 0, AreaExterna: 300, A_pav: 300, A_varr: 5000 };
+  const v = linhas(r);
+  assert.equal(v.tabela, "pequena");
+  assert.equal(linha(v, "varr").a, 5000);
+});
+
+test("registro anterior à separação (varrição dentro da área externa) dá o mesmo resultado", () => {
+  const antigo = { ...base(), AreaExterna: 2000, VarrSep: undefined };
+  const a = linhas(antigo), n = linhas(base());
+  assert.equal(a.total, n.total);
+  assert.equal(calc(antigo, DEF).CargaTecnica, calc(base(), DEF).CargaTecnica);
 });
 
 test("varrição é valorada só como área externa, separada da interna", () => {

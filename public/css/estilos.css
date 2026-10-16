@@ -175,3 +175,19 @@ input[type=email],input[type=password]{background:var(--surface);border:1px soli
 .papel[aria-pressed="true"] b::before{content:"✓ ";color:var(--pri)}
 .grp h3{font-size:14.5px;margin:0 0 4px}
 .lst li .bar{flex-wrap:wrap}
+/* Topo no celular: nome, perfis, e-mail e Sair quebram linha em vez de alargar a página */
+.tr{min-width:0;max-width:100%}
+#whoami{flex-wrap:wrap;justify-content:flex-end;row-gap:6px}
+#whoami .note{overflow-wrap:anywhere}
+@media (max-width:640px){
+  .top{align-items:flex-start}
+  .tr{align-items:flex-start;width:100%}
+  #whoami{justify-content:flex-start}
+  .brand h1{font-size:22px}
+}
+.filters input[type=checkbox]{min-width:0}
+@media (max-width:640px){
+  nav.tabs{flex-wrap:wrap}
+  .filters select,.filters input[type=text]{flex:1 1 100%}
+  .filters .sp{display:none}
+}

@@ -16,7 +16,7 @@ function vPainel(){
   if(!S.recs.length)return filtersBar()+`<div class="panel empty">Nenhum diagnóstico registrado. Use <b>Preenchimento</b> para cadastrar a primeira estrutura, quando o seu perfil permitir.</div>`;
   const cnt=s=>all.filter(x=>x.Status===s).length;
   const catN=new Set(UCS.filter(u=>ucInScope(u)&&(!S.fGer||u[2]===S.fGer)).map(u=>u[0]));const cov=new Set(all.filter(x=>catN.has(x.UC)).map(x=>x.UC)).size;
-  const sumA=k=>R.reduce((a,x)=>a+(x[k]||0),0);
+  const sumA=k=>R.reduce((a,x)=>a+((k==="AreaExterna"?areaExt(x):x[k])||0),0);
   const vtot=R.reduce((a,x)=>a+(valorRec(x)?.total||0),0);
   const valid=cnt("Validado")+cnt("Homologado"), hom=cnt("Homologado"), tot=all.length;
   const kp=`<div class="kpis">
@@ -27,7 +27,7 @@ function vPainel(){
     <div class="kpi"><div class="l">Área externa (m²)</div><div class="v">${f0(sumA("AreaExterna"))}</div><div class="s">registros concluídos</div></div>
     <div class="kpi"><div class="l">Valor referencial (R$/mês)</div><div class="v">${brl0(vtot)}</div><div class="s">CadTerc Vol. 03 · ${S.val.Regime==="ampla"?"participação ampla":"ME/EPP"}</div></div></div>`;
   const stk=`<div class="stack" role="img" aria-label="Andamento por situação">`+STATUS.map(s=>{const c=cnt(s);return c?`<span class="${stCls(s)}" style="flex:${c}">${c}</span>`:""}).join("")+`</div><div class="legend">`+STATUS.map(s=>`<span><span class="pill ${s==="Validado"||s==="Homologado"?"ok":s==="Devolvido"?"warn":s==="Em validação"?"info":""}">${sl(s)}</span> <b>${cnt(s)}</b></span>`).join("")+`</div>`;
-  const byG=gersVis().map(g=>{const a=all.filter(x=>x.Gerencia===g),r=a.filter(hasRes);return{g,u:UCS.filter(u=>u[2]===g&&ucInScope(u)).length,uc:new Set(a.map(x=>x.UC).filter(n=>UCS.some(u=>u[0]===n))).size,n:a.length,v:a.filter(x=>x.Status==="Validado"||x.Status==="Homologado").length,p:a.filter(x=>x.Status==="Rascunho"||x.Status==="Devolvido").length,ai:r.reduce((s,x)=>s+x.AreaInterna,0),ae:r.reduce((s,x)=>s+x.AreaExterna,0),c:r.reduce((s,x)=>s+x.CargaTecnica,0),vr:r.reduce((s,x)=>s+(valorRec(x)?.total||0),0)}});
+  const byG=gersVis().map(g=>{const a=all.filter(x=>x.Gerencia===g),r=a.filter(hasRes);return{g,u:UCS.filter(u=>u[2]===g&&ucInScope(u)).length,uc:new Set(a.map(x=>x.UC).filter(n=>UCS.some(u=>u[0]===n))).size,n:a.length,v:a.filter(x=>x.Status==="Validado"||x.Status==="Homologado").length,p:a.filter(x=>x.Status==="Rascunho"||x.Status==="Devolvido").length,ai:r.reduce((s,x)=>s+x.AreaInterna,0),ae:r.reduce((s,x)=>s+(areaExt(x)||0),0),c:r.reduce((s,x)=>s+x.CargaTecnica,0),vr:r.reduce((s,x)=>s+(valorRec(x)?.total||0),0)}});
   const cg=hbars(byG.filter(x=>x.vr>0).sort((a,b)=>b.vr-a.vr).map(x=>({l:x.g,v:x.vr})),brl0);
   const cnts=(key,order)=>hbars(order.map(o=>({l:o,v:R.filter(x=>x[key]===o).length})),f0,true);
   const aten=R.filter(x=>x.IUP>=7||x.IPS>=6).sort((a,b)=>b.CargaTecnica-a.CargaTecnica).slice(0,8);

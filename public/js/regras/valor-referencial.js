@@ -3,7 +3,10 @@
 
 const ITEMS=[["frio","Pisos frios","int"],["acarp","Pisos acarpetados","int"],["lab","Laboratórios","int"],["almox","Almoxarifados / galpões","int"],["ofic","Oficinas","int"],["saguao","Saguão, hall e salão","int"],["sanGC","Sanitários de grande circulação","int"],["pav","Pisos pavimentados adjacentes","ext"],["varr","Varrição de passeios e arruamentos","ext"],["patAlta","Pátios e áreas verdes · alta frequência","ext"],["patMedia","Pátios e áreas verdes · média frequência","ext"],["patBaixa","Pátios e áreas verdes · baixa frequência","ext"],["vidTriS","Vidros externos · trimestral, sem risco","vid"],["vidSemS","Vidros externos · semestral, sem risco","vid"],["vidTriR","Vidros externos · trimestral, com risco","vid"],["vidSemR","Vidros externos · semestral, com risco","vid"]];
 /* Detalhamento das áreas. Internas: a soma tem de bater com a área interna; externas: com a área externa. */
-const ITENS_INT=["A_frio","A_acarp","A_lab","A_almox","A_ofic","A_saguao"],ITENS_EXT=["A_pav","A_varr","A_patAlta","A_patMedia","A_patBaixa"];
+const ITENS_INT=["A_frio","A_acarp","A_lab","A_almox","A_ofic","A_saguao"],ITENS_EXT=["A_pav","A_patAlta","A_patMedia","A_patBaixa"];
+/* Varrição é um serviço à parte no CadTerc, como vidros: não entra na área externa.
+   Registros anteriores a essa separação (sem VarrSep) tinham a varrição dentro da área externa. */
+const areaExt=r=>r.AreaExterna==null?null:r.VarrSep===1?Number(r.AreaExterna)||0:Math.max(0,(Number(r.AreaExterna)||0)-(Number(r.A_varr)||0));
 const ITENS=["A_frio","A_acarp","A_lab","A_almox","A_ofic","A_saguao","A_pav","A_varr","A_patAlta","A_patMedia","A_patBaixa"];
 Object.assign(LBL,{A_frio:"Pisos frios",A_acarp:"Pisos acarpetados",A_lab:"Laboratórios",A_almox:"Almoxarifados / galpões",A_ofic:"Oficinas",A_saguao:"Saguão, hall e salão",A_pav:"Pisos pavimentados adjacentes",A_varr:"Varrição de passeios e arruamentos",A_patAlta:"Pátios · alta frequência",A_patMedia:"Pátios · média frequência",A_patBaixa:"Pátios · baixa frequência"});
 
@@ -34,7 +37,7 @@ const PROD={
 /* Cálculo do valor referencial mensal: área × valor unitário do CadTerc por tipo de serviço. */
 function valorar(r,x,v){
   v=v||S.val;
-  const T=v[v.Regime]||v.ampla,ai=Number(r.AreaInterna)||0,ae=Number(r.AreaExterna)||0,as=Number(r.AreaSanitaria)||0;
+  const T=v[v.Regime]||v.ampla,ai=Number(r.AreaInterna)||0,ae=areaExt(r)||0,as=Number(r.AreaSanitaria)||0;
   const pequena=(ai+ae)<=v.LimitePequena,U=pequena?T.pequena:T.geral,parque=r.Categoria==="Parque Estadual",fator=v.Fator>0?v.Fator:1;
   const tb=pequena?"pequena":"geral",hpm=PROD.jor[tb].hs*4.35;
   const base={v:2,tabela:tb,regime:v.Regime,fator,versao:v.Versao,limite:v.LimitePequena,parque,jornada:pequena?"24 h por semana (meio período), 2ª a sábado":"44 h por semana, 2ª a sábado"};
@@ -62,7 +65,7 @@ function valorar(r,x,v){
     if(parque){const s16=x.ClasseSan==="SAN-4",pr=s16?T.parque.posto16:T.parque.posto8;L.push({k:"sanGC",r:"Posto sanitário em parque ("+(s16?"16":"8")+" h diárias)",a:0,pr,t:Math.round(pr*fator*100)/100,uni:"posto",eq:s16?2:1,hm:R((s16?16:8)*30.42,10),dias:7})}
     else add("sanGC","Sanitários de grande circulação",sanA,U.sanGC);
   }
-  const remE=x.FrequenciaExterna==="Não se aplica"?0:Math.max(0,ae-g("pav")-g("varr")-g("patAlta")-g("patMedia")-g("patBaixa"));
+  const remE=x.FrequenciaExterna==="Não se aplica"?0:Math.max(0,ae-g("pav")-g("patAlta")-g("patMedia")-g("patBaixa"));
   const pk=x.FrequenciaExterna==="Semanal"?"patAlta":x.FrequenciaExterna==="Quinzenal"?"patMedia":"patBaixa";
   add("pav","Pisos pavimentados adjacentes",g("pav"),U.pav);
   add("varr","Varrição de passeios e arruamentos",g("varr"),parque?T.parque.varr:U.varr);
