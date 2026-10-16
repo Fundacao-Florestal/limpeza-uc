@@ -63,7 +63,7 @@ test("sem login não lê nada", async () => {
 test("e-mail não confirmado entra, mas sem perfil só pede acesso", async () => {
   await seed("e1", base());
   await assertSucceeds(setDoc(doc(db("novo", false), "usuarios", "novo"), { Uid: "novo", Nome: "N", Email: "n@x", UltimoAcesso: "x" }));
-  await assertSucceeds(setDoc(doc(db("novo", false), "pedidos", "novo"), { Uid: "novo", Perfil: "gestor", Obs: "", Em: "x" }));
+  await assertSucceeds(setDoc(doc(db("novo", false), "pedidos", "novo"), { Uid: "novo", Perfis: ["gestor"], UCs: ["PE Cantareira"], Obs: "", Em: "x" }));
   await assertSucceeds(getDoc(doc(db("novo", false), "config", "valores")));
   await assertFails(getDoc(doc(db("novo", false), "estruturas", "e1")));
   await assertFails(getDocs(collection(db("novo", false), "estruturas")));
