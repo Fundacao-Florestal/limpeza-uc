@@ -16,13 +16,15 @@ function vForm(m){
    <section class="sec"><h2>Estrutura e área</h2><p class="sub">Uma linha por estrutura. Áreas em m² de piso, em projeção horizontal (planta baixa), sem paredes, portas e divisórias. Em edificação com mais de um andar, some a área de todos os andares.</p>
      <div class="f" style="margin-bottom:12px"><span style="font-size:12.5px;font-weight:500;color:var(--ink2)">Uso principal</span><div class="chips" role="group" aria-label="Uso principal">${TIPOS.map(t=>`<button type="button" data-tipo="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join("")}</div></div>
      <div class="fields">${fTxt("Estrutura","Nome da estrutura")}</div>
-     <div class="grp"><div class="grp-h"><h3>Área interna</h3>${fNum("AreaInterna","m² total")}</div>
+     <div class="grp"><h3>Área interna</h3>
       <p class="sub">Distribua a área interna pelos tipos de piso. A soma precisa bater com o total.</p>
+      <div class="fields total">${fNum("AreaInterna","m² total")}</div>
       <div class="fields">${fNum("A_frio","m²")}${fNum("A_acarp","m²")}${fNum("A_lab","m²")}${fNum("A_almox","m²")}${fNum("A_ofic","m²")}${fNum("A_saguao","m²")}</div>
       <div class="soma" id="somaInt" aria-live="polite"></div>
       <p class="note dica"><b>Pisos frios:</b> paviflex, mármore, cerâmica, marmorite, plurigoma, madeira e similares; inclui os sanitários. <b>Almoxarifados/galpões:</b> depósito, estoque ou guarda de materiais. <b>Oficinas:</b> reparos e manutenção de equipamentos. <b>Saguão, hall e salão:</b> espaços livres com piso frio ou carpete.</p></div>
-     <div class="grp"><div class="grp-h"><h3>Área externa</h3>${fNum("AreaExterna","m² total")}</div>
+     <div class="grp"><h3>Área externa</h3>
       <p class="sub">Distribua a área externa pelos tipos de serviço. A soma precisa bater com o total; informe 0 se não houver área externa.</p>
+      <div class="fields total">${fNum("AreaExterna","m² total")}</div>
       <div class="fields">${fNum("A_pav","m²")}${fNum("A_varr","m²")}${fNum("A_patAlta","m²")}${fNum("A_patMedia","m²")}${fNum("A_patBaixa","m²")}</div>
       <div class="soma" id="somaExt" aria-live="polite"></div>
       <p class="note dica"><b>Pisos pavimentados adjacentes:</b> áreas no entorno da edificação, revestidas de cimento, lajota, cerâmica. <b>Varrição:</b> estacionamentos (inclusive cobertos), passeios, alamedas e arruamentos. <b>Pátios e áreas verdes:</b> limpeza semanal (alta), quinzenal (média) ou mensal (baixa); inclui recolher papéis, detritos e folhas, mas não roçada, capina ou jardinagem.</p></div>
