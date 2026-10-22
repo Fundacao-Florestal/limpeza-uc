@@ -1,4 +1,5 @@
-/* Acessos: pedido de perfil (quem ainda não tem) e gestão de perfis (Administrador). */
+/* Acessos: primeiro acesso (autocadastro, liberado na hora) e gestão de perfis pelo Administrador,
+   que pode editar, revogar e excluir os preenchimentos de quem foi revogado. */
 "use strict";
 
 function toggle(set,k,on){const v=on===undefined?!set.has(k):on;v?set.add(k):set.delete(k)}
@@ -30,21 +31,22 @@ function resumoAcesso(a,html){
 }
 function vSolic(){
   if(!S.db)return diag("Base de dados indisponível",`<p class="sub">O Firebase não está configurado nesta instalação. Verifique o arquivo firebase-config.js.</p>`);
+  if(S.acc&&S.acc.Revogado)return diag("Acesso revogado",`<p class="sub">O Administrador revogou o seu acesso a este sistema. Se for engano, fale com o NTIIA.</p>`);
   if(S.pedido&&!S.pedEdit){
     const r=resumoAcesso(S.pedido,true);
-    return `<div class="panel" style="max-width:760px"><h2>Solicitação enviada</h2><p class="sub">O Administrador vai conferir e liberar o acesso. Esta tela muda sozinha quando isso acontecer.</p><p style="margin:0 0 6px">${r.pills}</p><p class="note" style="margin:0">${esc(r.txt)}</p><div class="bar" style="margin:16px 0 0"><button class="btn" data-act="pedalterar">Alterar pedido</button></div></div>`;
+    return `<div class="panel" style="max-width:760px"><h2>Solicitação enviada</h2><p class="sub">Você marcou só "Outro", então o Administrador vai ver qual acesso faz sentido. Esta tela muda sozinha quando isso acontecer. Se você também é Gestor, Gerente, Validador ou só consulta, altere o pedido e marque essa opção: o acesso é liberado na hora.</p><p style="margin:0 0 6px">${r.pills}</p><p class="note" style="margin:0">${esc(r.txt)}</p><div class="bar" style="margin:16px 0 0"><button class="btn" data-act="pedalterar">Alterar pedido</button></div></div>`;
   }
   if(!S.ped)S.ped=pedNovo(S.pedido);
   const d=S.ped,on=k=>d.perfis.has(k);
   const card=([k,t,sub])=>`<button type="button" class="papel" data-rqp="${k}" aria-pressed="${on(k)}"><b>${t}</b><span>${sub}</span></button>`;
-  return `<div class="panel" style="max-width:760px"><h2>Solicitar acesso</h2><p class="sub">Marque o que você faz no processo. Pode marcar mais de uma opção, por exemplo gestora de uma UC e gerente da Gerência. O Administrador confere e libera.</p>
+  return `<div class="panel" style="max-width:760px"><h2>Primeiro acesso</h2><p class="sub">Marque o que você faz no processo. Pode marcar mais de uma opção, por exemplo gestora de uma UC e gerente da Gerência. O acesso é liberado na hora; só "Outro", sozinho, passa pelo Administrador.</p>
   <div class="papeis" role="group" aria-label="Papéis">${PAPEIS.map(card).join("")}</div>
   ${on("gestor")?`<section class="grp"><h3>Suas UCs</h3><p class="sub">Marque as UCs pelas quais você responde.</p><input type="text" id="rqQ" placeholder="Buscar UC ou Gerência" autocomplete="off" value="${esc(d.q)}"><div class="note" id="rqCount" style="margin:6px 0"></div><div class="ucl" id="rqList"></div></section>`:""}
   ${on("gerente")?`<section class="grp"><h3>Sua Gerência</h3><div class="checks">${GER.map(g=>`<label><input type="checkbox" data-rqger="${g}" ${d.gers.has(g)?"checked":""}> ${esc(nomeGer(g))}</label>`).join("")}</div></section>`:""}
   ${on("outro")?`<section class="grp"><h3>Outra função</h3><label class="f wide">Qual a sua função no processo?<input type="text" id="rqOutro" maxlength="200" value="${esc(d.outro)}"></label></section>`:""}
   <label class="f wide" style="margin-top:14px">Observações (opcional)<textarea id="rqObs" rows="2" maxlength="400">${esc(d.obs)}</textarea></label>
   <div id="rqErr" role="alert"></div>
-  <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="solicitar">Enviar pedido</button>${S.pedido?`<button class="btn" data-act="pedcancelar">Cancelar alteração</button>`:""}</div></div>`;
+  <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="solicitar">${[...d.perfis].some(k=>k!=="outro")?"Entrar no sistema":"Enviar pedido"}</button>${S.pedido?`<button class="btn" data-act="pedcancelar">Cancelar alteração</button>`:""}</div></div>`;
 }
 /* Lista de UCs do pedido, filtrada pela busca; a UC marcada fica no topo. */
 function renderRqList(){
@@ -68,6 +70,14 @@ async function solicitar(){
   if(e.length){if(box)box.innerHTML=`<div class="banner">${e.map(esc).join(" ")}</div>`;return}
   const ps=PAPEIS.map(p=>p[0]).filter(k=>d.perfis.has(k));
   const doc={Uid:S.me.id,Perfis:ps,Perfil:ps[0],UCs:d.perfis.has("gestor")?[...d.ucs]:[],Gerencias:d.perfis.has("gerente")?[...d.gers]:[],Outro:d.perfis.has("outro")?d.outro.trim().slice(0,200):"",Obs:d.obs.trim().slice(0,400),Em:new Date().toISOString()};
+  /* Com algum papel do sistema, o acesso é criado na hora (autocadastro). Só "Outro" vira pedido ao Administrador. */
+  const psA=ORDEM_PERFIS.filter(k=>k!=="admin"&&d.perfis.has(k));
+  if(psA.length){
+    const acc={...doc,Perfis:psA,Perfil:psA[0],Auto:true};
+    try{await S.db.doc("acessos/"+slug(S.me.id)).set(acc);S.ped=null;S.pedEdit=false}
+    catch(x){toast(x&&x.code==="permission-denied"?"O banco recusou o cadastro. Recarregue a página e tente de novo.":"Não foi possível concluir: "+(x.message||x.code))}
+    return;
+  }
   try{await S.db.doc("pedidos/"+slug(S.me.id)).set(doc);S.ped=null;S.pedEdit=false;S.pedido=doc;render();toast("Pedido enviado.")}
   catch(x){toast(x&&x.code==="permission-denied"?"O banco recusou o pedido. Se você já tem perfil, recarregue a página.":"Não foi possível enviar: "+(x.message||x.code))}
 }
@@ -77,17 +87,48 @@ function vAcc(){
   if(!S.db)return `<div class="panel empty">A gestão de acessos exige a base compartilhada.</div>`;
   const pend=S.pedidos.filter(p=>!S.accAll.some(a=>a.Uid===p.Uid));
   const email=uid=>{const u=(S.usersAll||[]).find(x=>x.Uid===uid);return u&&u.Email?`<div class="note" style="margin:0">${esc(u.Email)}</div>`:""};
-  const linhaPed=p=>{const r=resumoAcesso(p,true),so=perfisPedido(p).length===0;return `<li><div style="min-width:0;flex:1 1 260px"><b>${esc(who(p.Uid))}</b>${email(p.Uid)}<div style="margin:4px 0 2px">${r.pills}</div><div class="note" style="margin:0">${esc(r.txt)}</div></div><div class="bar" style="margin:0"><button class="btn pri sm" data-act="aprovar" data-uid="${esc(p.Uid)}" ${so?"disabled title=\"Pedido só com 'Outro': use Ajustar\"":""}>Aprovar</button><button class="btn sm" data-act="asg" data-uid="${esc(p.Uid)}">Ajustar</button><button class="btn sm" data-act="recusar" data-uid="${esc(p.Uid)}">Recusar</button></div></li>`};
-  const linhaAcc=a=>{const r=resumoAcesso(a,true);return `<li><div style="min-width:0;flex:1 1 260px"><b>${esc(who(a.Uid))}</b> ${r.pills}<div class="note" style="margin:0">${esc(r.txt||"Sem escopo")}</div></div><button class="btn sm" data-act="asg" data-uid="${esc(a.Uid)}">Editar</button><button class="btn crit sm" data-act="remover" data-uid="${esc(a.Uid)}">Remover</button></li>`};
+  const recente=a=>a.Auto&&a.Em&&(Date.now()-new Date(a.Em).getTime())<7*864e5;
+  const porData=(x,y)=>String(y.Em||"").localeCompare(String(x.Em||""));
+  const ativos=S.accAll.filter(a=>!a.Revogado).sort(porData),revog=S.accAll.filter(a=>a.Revogado).sort((x,y)=>String(y.RevogadoEm||"").localeCompare(String(x.RevogadoEm||"")));
+  const nRecs=uid=>S.recs.filter(x=>x.CriadoPor===uid).length;
+  const linhaPed=p=>{const r=resumoAcesso(p,true);return `<li><div style="min-width:0;flex:1 1 260px"><b>${esc(who(p.Uid))}</b>${email(p.Uid)}<div style="margin:4px 0 2px">${r.pills}</div><div class="note" style="margin:0">${esc(r.txt)}</div></div><div class="bar" style="margin:0"><button class="btn pri sm" data-act="asg" data-uid="${esc(p.Uid)}">Atribuir perfil</button><button class="btn sm" data-act="recusar" data-uid="${esc(p.Uid)}">Recusar</button></div></li>`};
+  const linhaAcc=a=>{const r=resumoAcesso(a,true),n=nRecs(a.Uid);return `<li><div style="min-width:0;flex:1 1 260px"><b>${esc(who(a.Uid))}</b> ${recente(a)?'<span class="pill warn">Novo</span> ':""}${r.pills}${email(a.Uid)}<div class="note" style="margin:0">${esc(r.txt||"Sem escopo")}</div><div class="note" style="margin:0">${a.Auto?"Autocadastro":"Atribuído pelo Administrador"}${a.Em?" em "+esc(fdt(a.Em)):""} · ${n} preenchimento(s)</div></div><div class="bar" style="margin:0"><button class="btn sm" data-act="asg" data-uid="${esc(a.Uid)}">Editar</button>${a.Uid!==S.me.id?`<button class="btn crit sm" data-act="revogar" data-uid="${esc(a.Uid)}">Revogar</button>`:""}</div></li>`};
+  const linhaRev=a=>{const n=nRecs(a.Uid);return `<li><div style="min-width:0;flex:1 1 260px"><b>${esc(who(a.Uid))}</b> <span class="pill crit">Revogado</span>${email(a.Uid)}<div class="note" style="margin:0">${a.RevogadoEm?"Em "+esc(fdt(a.RevogadoEm))+" · ":""}${n} preenchimento(s)</div></div><div class="bar" style="margin:0"><button class="btn sm" data-act="asg" data-uid="${esc(a.Uid)}">Reativar</button>${n?`<button class="btn crit sm" data-act="apagarde" data-uid="${esc(a.Uid)}">Excluir preenchimentos</button>`:""}</div></li>`};
   return `<div class="grid g2" style="margin-top:0">
-  <section class="panel"><h2>Solicitações pendentes</h2><p class="sub">Cada pessoa informou o que faz e em quais UCs ou Gerências. Antes de aprovar, confira com ela por fora (Teams, telefone): o e-mail não é verificado.</p>
-   ${pend.length?`<ul class="lst">${pend.map(linhaPed).join("")}</ul>`:`<div class="empty">Nenhuma solicitação pendente.</div>`}
-   <h3 style="font-size:14px;margin:18px 0 6px">Adicionar pessoa</h3>
+  <section class="panel"><h2>Pessoas com acesso</h2><p class="sub">Quem cria a conta já entra com os papéis que marcou. Confira os novos cadastros e revogue o que não fizer sentido: o e-mail não é verificado.</p>
+   ${ativos.length?`<ul class="lst">${ativos.map(linhaAcc).join("")}</ul>`:`<div class="empty">Ninguém com acesso ainda.</div>`}</section>
+  <div>
+  ${pend.length?`<section class="panel" style="margin-bottom:16px"><h2>Pedidos com "Outro"</h2><p class="sub">Essas pessoas não se encaixaram em nenhum papel. Atribua um perfil ou recuse.</p><ul class="lst">${pend.map(linhaPed).join("")}</ul></section>`:""}
+  <section class="panel"><h2>Adicionar pessoa</h2><p class="sub">Para atribuir um perfil a quem já entrou no sistema.</p>
    <input type="text" id="pSearch" placeholder="Buscar por nome ou e-mail" autocomplete="off"><ul class="lst" id="psRes" style="margin-top:8px"></ul></section>
-  <section class="panel"><h2>Pessoas com acesso</h2><p class="sub">Uma pessoa pode ter mais de um perfil, por exemplo Gestor de uma UC e Gerente da Gerência.</p>
-   ${S.accAll.length?`<ul class="lst">${S.accAll.map(linhaAcc).join("")}</ul>`:`<div class="empty">Ninguém com perfil atribuído. O administrador enxerga tudo por padrão.</div>`}</section></div>
-  <p class="note">Use "Ver como" no topo da página para conferir o que cada perfil enxerga.</p>
-  <section class="panel" style="margin-top:16px"><h2>Como liberar o acesso</h2><ol class="note" style="margin:0;padding-left:18px;display:grid;gap:4px"><li>Envie o endereço do sistema. A pessoa cria a conta e, em seguida, marca o que faz (Gestor, Gerente, os dois ou outro) e em quais UCs ou Gerências.</li><li>O pedido aparece em "Solicitações pendentes". <b>Aprovar</b> libera exatamente o que foi pedido; <b>Ajustar</b> abre para corrigir antes.</li><li>Para atribuir sem pedido, busque a pessoa em "Adicionar pessoa". Só aparece quem já entrou no sistema ao menos uma vez.</li></ol></section>`;
+  ${revog.length?`<section class="panel" style="margin-top:16px"><h2>Acessos revogados</h2><p class="sub">Essas pessoas não entram mais e não conseguem se cadastrar de novo. Reativar abre a edição do perfil.</p><ul class="lst">${revog.map(linhaRev).join("")}</ul></section>`:""}
+  </div></div>
+  <p class="note">Use "Ver como" no topo da página para conferir o que cada perfil enxerga.</p>`;
+}
+/* Revogar: a pessoa perde o acesso na hora (a tela dela muda sozinha). Opcionalmente, exclui o que ela preencheu. */
+function openRevogar(uid){
+  const n=S.recs.filter(x=>x.CriadoPor===uid).length;
+  $("#dlgBody").innerHTML=`<h2>Revogar acesso</h2><p class="note" style="margin:2px 0 12px"><b>${esc(who(uid))}</b></p>
+  <p class="sub">A pessoa deixa de ver e de preencher qualquer coisa, e não consegue se cadastrar de novo. Você pode reativar depois.</p>
+  ${n?`<label class="checks" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px"><input type="checkbox" id="rvApagar"> <span>Excluir também os <b>${n}</b> preenchimento(s) feitos por essa pessoa. <span class="note" style="margin:0">Não dá para desfazer.</span></span></label>`:`<p class="note">Essa pessoa não tem preenchimentos.</p>`}
+  <div class="bar" style="margin:18px 0 0"><button class="btn crit" data-act="revogarok" data-uid="${esc(uid)}">Revogar</button><span class="sp"></span><button class="btn" data-act="fechar">Cancelar</button></div>`;
+  if(!$("#dlg").open)$("#dlg").showModal();
+}
+async function apagarRecs(lista){
+  let ok=0;for(const x of lista){try{await S.db.doc("estruturas/"+slug(x.ID)).delete();ok++}catch(e){console.warn(e)}}
+  return ok;
+}
+async function revogar(uid,apagar){
+  try{await S.db.doc("acessos/"+slug(uid)).update({Revogado:true,RevogadoEm:new Date().toISOString(),RevogadoPor:S.me.id||"admin"})}
+  catch(e){toast("Não foi possível revogar: "+(e.message||e.code));return}
+  let msg="Acesso revogado.";
+  if(apagar){const n=await apagarRecs(S.recs.filter(x=>x.CriadoPor===uid));msg+=` ${n} preenchimento(s) excluído(s).`}
+  $("#dlg").close();toast(msg);
+}
+async function apagarDe(uid){
+  const l=S.recs.filter(x=>x.CriadoPor===uid);if(!l.length)return;
+  if(!confirm(`Excluir os ${l.length} preenchimento(s) de ${who(uid)}? Não dá para desfazer.`))return;
+  toast(`${await apagarRecs(l)} preenchimento(s) excluído(s).`);
 }
 /* Perfis de um pedido que viram acesso (Outro é só informativo). */
 const perfisPedido=p=>(p.Perfis&&p.Perfis.length?p.Perfis:(p.Perfil?[p.Perfil]:[])).filter(k=>ORDEM_PERFIS.includes(k)&&k!=="admin");

@@ -90,7 +90,11 @@ O perfil de cada pessoa fica em `acessos/<uid>`. As regras do Firestore aplicam 
 
 Uma pessoa pode ter mais de um perfil, por exemplo Gestora de uma UC e Gerente da Gerência: ela vê e pode fazer o que cada um dos perfis libera (campo `Perfis`, uma lista; acessos antigos só com `Perfil` continuam valendo).
 
-Quem entra sem perfil vê apenas a tela de pedido de acesso, onde marca um ou mais papéis (Gestor de UC, Gerente, Validador final, Consulta ou Outro) e já escolhe as suas UCs e a sua Gerência. Na aba Acessos o Administrador vê o pedido completo e libera com **Aprovar**, ou usa **Ajustar** para mudar algo antes. O e-mail não é confirmado: quem decide o acesso é o Administrador, ao atribuir o perfil. Como qualquer pessoa pode criar uma conta com um e-mail que não é dela (dentro dos domínios aceitos), confira com a pessoa por fora (Teams, telefone) antes de aprovar um pedido. Para voltar a exigir a confirmação de e-mail, veja o comentário em `signedIn()` no `firestore.rules`.
+Autocadastro: quem entra pela primeira vez marca um ou mais papéis (Gestor de UC, Gerente, Validador final, Consulta ou Outro), escolhe as suas UCs e a sua Gerência e já entra com esse acesso, sem esperar aprovação. Só quem marca apenas "Outro" fica aguardando o Administrador atribuir um perfil. As regras do Firestore deixam cada pessoa criar o próprio acesso uma única vez e nunca como Administrador.
+
+Na aba Acessos o Administrador vê todos, com os cadastros recentes marcados como **Novo**, e pode **Editar** ou **Revogar**. Revogar não apaga o documento: marca `Revogado: true`, a pessoa perde o acesso na hora e não consegue se cadastrar de novo; dá para **Reativar** depois. Ao revogar, dá para excluir também tudo o que a pessoa preencheu. O Administrador também exclui qualquer preenchimento pelo botão **Excluir** no detalhe da estrutura.
+
+O e-mail não é confirmado, então qualquer pessoa que crie uma conta (dentro dos domínios aceitos em `ALLOWED_EMAIL_DOMAINS`) entra com o papel que escolher. Confira os novos cadastros. Para voltar a exigir a confirmação de e-mail, veja o comentário em `signedIn()` no `firestore.rules`.
 
 Coleções do Firestore: `estruturas/<ID>` (um documento por estrutura), `acessos/<uid>`, `pedidos/<uid>`, `usuarios/<uid>` (nome e e-mail de quem já entrou) e `config/valores`, `config/parametros`.
 
@@ -201,5 +205,5 @@ Para testar no seu computador sem tocar no projeto real, rode `npm run dev` e ab
 ## Limites conhecidos
 
 - A Gerência de cada estrutura é preenchida pelo app a partir da UC; as regras confiam nesse campo e não conferem a correspondência UC → Gerência.
-- Para desativar o acesso de alguém, remova o perfil na aba Acessos. Para bloquear também o login, desative a conta em **Authentication > Users**.
+- Para desativar o acesso de alguém, use **Revogar** na aba Acessos. Para bloquear também o login, desative a conta em **Authentication > Users**.
 - Cada estrutura cadastrada tem um único Gestor dono. Se a UC trocar de Gestor, o Administrador precisa editar o campo `CriadoPor` das estruturas no console.

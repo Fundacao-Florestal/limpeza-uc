@@ -166,6 +166,38 @@ test("pedido de acesso: um ou mais papéis, nunca admin", async () => {
   await assertFails(setDoc(doc(db("n7"), "pedidos", "n7"), p("n7", { Outro: "x".repeat(201) })));
 });
 
+test("autocadastro: quem não tem acesso se cadastra já liberado, nunca como admin", async () => {
+  const a = (uid, extra) => ({ Uid: uid, Perfis: ["gestor"], Perfil: "gestor", UCs: ["PE Cantareira"], Gerencias: [], Outro: "", Obs: "", Em: "x", Auto: true, ...extra });
+  await assertSucceeds(setDoc(doc(db("c1", false), "acessos", "c1"), a("c1")));
+  await assertSucceeds(setDoc(doc(db("c1"), "estruturas", "e1"), base({ ID: "C1", CriadoPor: "c1" })));
+  await assertSucceeds(setDoc(doc(db("c2"), "acessos", "c2"), a("c2", { Perfis: ["gerente", "gestor", "validador"], Gerencias: ["GLN"] })));
+  await assertFails(setDoc(doc(db("c3"), "acessos", "c3"), a("c3", { Perfis: ["admin"], Perfil: "admin" })));
+  await assertFails(setDoc(doc(db("c4"), "acessos", "c4"), a("c4", { Perfis: ["gestor", "admin"] })));
+  await assertFails(setDoc(doc(db("c5"), "acessos", "c5"), a("c5", { Perfil: "admin" })));
+  await assertFails(setDoc(doc(db("c6"), "acessos", "c6"), a("c6", { Perfis: ["outro"], Perfil: "outro" })));
+  await assertFails(setDoc(doc(db("c7"), "acessos", "c7"), a("c7", { Revogado: false })));
+  await assertFails(setDoc(doc(db("c8"), "acessos", "outra"), a("outra")));
+  await assertFails(setDoc(doc(db("c9"), "acessos", "c9"), a("c9", { Auto: false })));
+  // Quem já tem acesso não se recadastra nem se altera.
+  await assertFails(setDoc(doc(db("gest"), "acessos", "gest"), a("gest", { Perfis: ["validador"], Perfil: "validador" })));
+  await assertFails(updateDoc(doc(db("c1"), "acessos", "c1"), { Perfis: ["validador"] }));
+});
+
+test("revogado: perde tudo e não consegue se cadastrar de novo", async () => {
+  await seed("e1", base());
+  await assertSucceeds(updateDoc(doc(db("adm"), "acessos", "gest"), { Revogado: true, RevogadoEm: "x", RevogadoPor: "adm" }));
+  await assertFails(getDoc(doc(db("gest"), "estruturas", "e1")));
+  await assertFails(setDoc(doc(db("gest"), "estruturas", "e2"), base({ ID: "Z" })));
+  await assertSucceeds(getDoc(doc(db("gest"), "acessos", "gest")));
+  await assertFails(setDoc(doc(db("gest"), "acessos", "gest"), { Uid: "gest", Perfis: ["gestor"], Perfil: "gestor", UCs: ["PE Cantareira"], Auto: true }));
+  await assertFails(deleteDoc(doc(db("gest"), "acessos", "gest")));
+  await assertFails(setDoc(doc(db("gest"), "pedidos", "gest"), { Uid: "gest", Perfis: ["gestor"], Em: "x" }));
+  // Administrador exclui o preenchimento e pode reativar.
+  await assertSucceeds(deleteDoc(doc(db("adm"), "estruturas", "e1")));
+  await assertSucceeds(setDoc(doc(db("adm"), "acessos", "gest"), ACESSOS.gest));
+  await assertSucceeds(setDoc(doc(db("gest"), "estruturas", "e3"), base({ ID: "W" })));
+});
+
 test("pessoa com dois perfis (gestor e gerente) tem a soma dos dois", async () => {
   await seed("propria", base({ ID: "P", CriadoPor: "duplo" }));
   await seed("gls", base({ ID: "S", Gerencia: "GLS", Status: "Em validação" }));

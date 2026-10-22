@@ -37,8 +37,9 @@ service cloud.firestore {
       return get(accPath()).data;
     }
     // Lista de perfis da pessoa; acesso antigo, só com Perfil, vale como lista de um item.
+    // Acesso revogado pelo Administrador (Revogado: true) não tem perfil nenhum.
     function perfis() {
-      return !hasAcc() ? [] : acc().get('Perfis', [acc().get('Perfil', '')]);
+      return !hasAcc() || acc().get('Revogado', false) == true ? [] : acc().get('Perfis', [acc().get('Perfil', '')]);
     }
     function tem(p) {
       return p in perfis();
@@ -61,9 +62,26 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Autocadastro: quem entra pela primeira vez cria o próprio acesso, já liberado, com os papéis que marcou.
+    // Nunca admin, e só uma vez: depois disso só o Administrador altera. Para revogar, o Administrador grava
+    // Revogado: true; como o documento continua existindo, a pessoa não consegue se cadastrar de novo.
+    function autoCadastro(uid) {
+      let d = request.resource.data;
+      return signedIn() && request.auth.uid == uid && !exists(accPath())
+        && d.keys().hasOnly(['Uid', 'Perfis', 'Perfil', 'UCs', 'Gerencias', 'Outro', 'Obs', 'Em', 'Auto'])
+        && d.Uid == uid && d.Auto == true
+        && d.Perfis is list && d.Perfis.size() >= 1
+        && d.Perfis.toSet().difference(['gestor', 'gerente', 'validador', 'final'].toSet()).size() == 0
+        && d.Perfil in d.Perfis
+        && d.get('UCs', []) is list && d.get('UCs', []).size() <= 200
+        && d.get('Gerencias', []) is list && d.get('Gerencias', []).size() <= 20
+        && d.get('Outro', '') is string && d.get('Outro', '').size() <= 200
+        && d.get('Obs', '') is string && d.get('Obs', '').size() <= 400;
+    }
     match /acessos/{uid} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
-      allow write: if isAdmin();
+      allow create: if isAdmin() || autoCadastro(uid);
+      allow update, delete: if isAdmin();
     }
 
     // Pedido de perfil feito por quem ainda não tem acesso.
