@@ -4,7 +4,7 @@
 "use strict";
 
 const ORDEM_PERFIS=["admin","gerente","gestor","validador","final"];
-const perfisDoc=a=>{if(!a)return[];const l=Array.isArray(a.Perfis)&&a.Perfis.length?a.Perfis:(a.Perfil?[a.Perfil]:[]);return ORDEM_PERFIS.filter(p=>l.includes(p))};
+const perfisDoc=a=>{if(!a||a.Revogado)return[];const l=Array.isArray(a.Perfis)&&a.Perfis.length?a.Perfis:(a.Perfil?[a.Perfil]:[]);return ORDEM_PERFIS.filter(p=>l.includes(p))};
 /* Perfis em uso agora. "Ver como" (Administrador testando) simula um perfil só. */
 function perfisAtivos(){
   if(S.viewAs&&S.isAdmin)return[S.viewAs];

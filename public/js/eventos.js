@@ -45,6 +45,10 @@ document.addEventListener("click",e=>{
   else if(a==="asg")openAsg(t.dataset.uid);
   else if(a==="asgsalvar")saveAsg();
   else if(a==="remover")removeAcc(t.dataset.uid);
+  else if(a==="revogar")openRevogar(t.dataset.uid);
+  else if(a==="revogarok")revogar(t.dataset.uid,!!($("#rvApagar")&&$("#rvApagar").checked));
+  else if(a==="apagarde")apagarDe(t.dataset.uid);
+  else if(a==="apagar"){const x=S.recs.find(r=>r.ID===t.dataset.id);if(!x||!confirm(`Excluir "${x.Estrutura}" (${x.UC})? Não dá para desfazer.`))return;(async()=>{const n=await apagarRecs([x]);$("#dlg").close();toast(n?"Preenchimento excluído.":"Não foi possível excluir.");render()})()}
   else if(a==="recusar")recusar(t.dataset.uid);
   else if(a==="solicitar")solicitar();
   else if(a==="pedalterar"){S.pedEdit=true;S.ped=pedNovo(S.pedido);render()}
