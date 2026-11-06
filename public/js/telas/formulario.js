@@ -9,7 +9,7 @@ function fTxt(k,ph,list){return `<label class="f" data-w="${k}">${LBL[k]}<input 
 function vForm(m){
   if(!S.form){S.form=newForm();S.edit=null}
   const isE=!!S.edit, st=S.edit?S.edit.Status:"Rascunho";
-  m.innerHTML=`<div class="bar"><h2 style="font-size:20px">${isE?"Editar estrutura":"Nova estrutura"}</h2>${isE?stPill(st):""}<span class="sp"></span><button class="btn" data-act="cancelar">${isE?"Cancelar":"Limpar"}</button></div>
+  m.innerHTML=`<div class="bar"><h2 style="font-size:20px">${isE?"Editar estrutura":"Nova estrutura"}</h2>${isE?stPill(st):""}<span class="sp"></span><button class="btn" data-act="cancelar">${autoPode()?"Fechar":isE?"Cancelar":"Limpar"}</button></div>
   <div class="formgrid"><div>
    <section class="sec"><h2>Quem está preenchendo</h2><p class="sub">Nome de quem levantou as informações. Fica registrado no diagnóstico e aparece para o Gerente na aprovação. Seu envio não é visível para outros preenchedores.</p><div class="fields">${fTxt("Responsavel","Nome completo")}${fTxt("Contato","E-mail ou telefone (opcional)")}</div></section>
    <section class="sec"><h2>Onde fica</h2><p class="sub">Escolha a UC ou área protegida na relação abaixo. Gerência e categoria vêm do cadastro do Notion (${UCS.length} áreas, sincronizado em ${SYNC}).</p><div id="ucBox" class="ucbox"></div></section>
@@ -48,6 +48,7 @@ function vForm(m){
   </div>
   <aside class="side"><section class="panel"><h2>Conferência</h2><div id="chk"></div></section>
    <section class="panel"><h2>Indicadores</h2><div id="ind"></div></section>
+   <p class="note" id="autoSv" aria-live="polite" style="margin:0 0 8px">${esc(AUTO.msg)}</p>
    <div class="bar" style="margin:0"><button class="btn" id="bRasc" data-act="rascunho" ${isE&&st!=="Rascunho"&&st!=="Devolvido"?"hidden":""}>Salvar rascunho</button><button class="btn pri" id="bConc" data-act="concluir">${isE&&st!=="Rascunho"?"Salvar e reenviar":"Enviar"}</button>${isE?"":`<button class="btn pri" id="bMais" data-act="concluirmais">Enviar e cadastrar outra</button>`}</div></aside></div>`;
   renderUcBox();refreshInputs();refreshCheck();
 }
@@ -59,6 +60,7 @@ function refreshInputs(){
   $("#sec_san")&&($("#sec_san").hidden=r.Sanitario!==1);$("#sec_hosp")&&($("#sec_hosp").hidden=r.Hospedaria!==1);$("#sec_vid")&&($("#sec_vid").hidden=r.Vidros!==1);
 }
 function refreshCheck(){
+  autoAgendar();
   const r=S.form,c=check(r,S.recs,!!S.edit);
   document.querySelectorAll("#main [data-w]").forEach(l=>l.classList.toggle("bad",false));
   const bl=c.blank.map(k=>LBL[k]);
@@ -103,6 +105,7 @@ function buildDoc(concl){
   return doc;
 }
 async function submit(concl,again){
+  clearTimeout(AUTO.t);AUTO.t=null;if(AUTO.p)await AUTO.p;
   const r=S.form,c=check(r,S.recs,!!S.edit);
   if(tem("gestor")&&!tester()&&r.UC&&!myUCs().has(r.UC)){toast("A UC selecionada não está atribuída ao seu perfil.");return}
   if(concl&&(c.blank.length||c.err.length)){toast("Corrija as pendências da conferência.");return}
@@ -110,12 +113,45 @@ async function submit(concl,again){
   if(!concl&&S.recs.some(x=>x.ID!==r.ID&&x.UC===r.UC&&norm(x.Estrutura)===norm(r.Estrutura))){toast("Já existe uma estrutura com este nome nesta UC.");return}
   S.saving=true;refreshCheck();
   try{if(!String(r.ID||"").trim())r.ID=await freshId(r);const doc=buildDoc(concl);await saveRec(doc);const keep={UC:r.UC,Gerencia:r.Gerencia,Categoria:r.Categoria,UCTipo:r.UCTipo,UCCadastro:r.UCCadastro,Responsavel:r.Responsavel,Contato:r.Contato};
-    S.edit=null;S.saving=false;S._keep=keep;
+    S.edit=null;S.saving=false;S._keep=keep;AUTO.form=null;AUTO.msg="";
     if(again){S.form=newForm();Object.assign(S.form,keep);S.ucManual=false;S.view="form";render();window.scrollTo({top:0});toast("Envio registrado (protocolo "+doc.ID+"). Cadastre a próxima estrutura de "+keep.UC+".")}
     else if(concl){S.form=null;S.view=tem("gestor")?"minha":"reg";render();confirmDlg(doc)}
     else{toast("Rascunho salvo.");S.form=null;S.view=tem("gestor")?"minha":"reg";render()}}
   catch(e){S.saving=false;refreshCheck();toast("Não foi possível gravar: "+(e.message||e.code||"erro"))}
 }
+/* Rascunho automático: 2 s depois da última alteração, grava como Rascunho, sem sair da tela.
+   Vale para diagnóstico novo, rascunho e devolvido (que passa a rascunho, guardando o motivo).
+   O que está em aprovação ou já aprovado só é gravado pelos botões, para não sair do fluxo sem querer. */
+const AUTO={t:null,p:null,base:null,form:null,msg:""};
+function autoPode(){const st=S.edit?S.edit.Status:"Rascunho";return !!S.db&&canFill()&&!tester()&&(st==="Rascunho"||st==="Devolvido")}
+function autoStatus(t){AUTO.msg=t;const el=$("#autoSv");if(el)el.textContent=t}
+function autoAgendar(){
+  const r=S.form;if(!r)return;
+  if(AUTO.form!==r){clearTimeout(AUTO.t);AUTO.t=null;AUTO.form=r;AUTO.base=JSON.stringify(r);autoStatus(autoPode()?"As alterações são salvas automaticamente como rascunho.":"");return}
+  if(!autoPode()||JSON.stringify(r)===AUTO.base)return;
+  clearTimeout(AUTO.t);autoStatus("Alterações ainda não salvas…");AUTO.t=setTimeout(autoSalvar,2000);
+}
+function autoSalvar(){
+  clearTimeout(AUTO.t);AUTO.t=null;
+  if(AUTO.p)return AUTO.p.then(autoSalvar);
+  const r=AUTO.form;
+  if(!r||S.saving||!autoPode()||JSON.stringify(r)===AUTO.base)return Promise.resolve();
+  if(!String(r.UC).trim()||!String(r.Estrutura).trim()){autoStatus("Para salvar automaticamente, escolha a UC e dê um nome à estrutura.");return Promise.resolve()}
+  if(tem("gestor")&&!myUCs().has(r.UC))return Promise.resolve();
+  if(S.recs.some(x=>x.ID!==r.ID&&x.UC===r.UC&&norm(x.Estrutura)===norm(r.Estrutura))){autoStatus("Já existe uma estrutura com este nome nesta UC. Mude o nome para salvar.");return Promise.resolve()}
+  autoStatus("Salvando rascunho…");
+  AUTO.p=(async()=>{
+    try{if(!String(r.ID||"").trim())r.ID=await freshId(r);
+      const snap=JSON.stringify(r),doc=buildDoc(false);await saveRec(doc);
+      if(AUTO.form===r){AUTO.base=snap;if(S.form===r)S.edit=doc;autoStatus("Rascunho salvo automaticamente às "+new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})+".")}}
+    catch(e){autoStatus("Não foi possível salvar automaticamente. Use Salvar rascunho.")}
+    finally{AUTO.p=null}
+  })();
+  return AUTO.p;
+}
+/* Ao sair do formulário, grava o que ainda estava pendente. */
+function autoFlush(){return AUTO.t||AUTO.p?autoSalvar():Promise.resolve()}
+
 function confirmDlg(d){
   const priv=tem("gestor")?"Seu envio fica visível apenas para você e para quem analisa os diagnósticos. Outros participantes não têm acesso a ele.":"O envio foi gravado na base compartilhada.";
   $("#dlgBody").innerHTML=`<div role="status"><h2 style="color:var(--ok)">Envio registrado com sucesso</h2>
