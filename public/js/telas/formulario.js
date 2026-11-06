@@ -48,7 +48,7 @@ function vForm(m){
   </div>
   <aside class="side"><section class="panel"><h2>Conferência</h2><div id="chk"></div></section>
    <section class="panel"><h2>Indicadores</h2><div id="ind"></div></section>
-   <div class="bar" style="margin:0"><button class="btn" id="bRasc" data-act="rascunho" ${isE&&st!=="Rascunho"?"hidden":""}>Salvar rascunho</button><button class="btn pri" id="bConc" data-act="concluir">${isE&&st!=="Rascunho"?"Salvar e reenviar":"Enviar"}</button>${isE?"":`<button class="btn pri" id="bMais" data-act="concluirmais">Enviar e cadastrar outra</button>`}</div></aside></div>`;
+   <div class="bar" style="margin:0"><button class="btn" id="bRasc" data-act="rascunho" ${isE&&st!=="Rascunho"&&st!=="Devolvido"?"hidden":""}>Salvar rascunho</button><button class="btn pri" id="bConc" data-act="concluir">${isE&&st!=="Rascunho"?"Salvar e reenviar":"Enviar"}</button>${isE?"":`<button class="btn pri" id="bMais" data-act="concluirmais">Enviar e cadastrar outra</button>`}</div></aside></div>`;
   renderUcBox();refreshInputs();refreshCheck();
 }
 function refreshInputs(){
@@ -92,7 +92,7 @@ function setFlag(k,v){
 function buildDoc(concl){
   const r=S.form,old=S.edit,now=new Date().toISOString(),me=S.me.id||"anon";
   const doc={};TXT.forEach(k=>doc[k]=String(r[k]??"").trim());NUM.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));ITENS.forEach(k=>doc[k]=r[k]==null?null:Number(r[k]));doc.VarrSep=1;
-  RES.forEach(k=>doc[k]=null);doc.ValorMensal=null;doc.ValorJSON=null;doc.VersaoRegra=null;doc.ParamsJSON=null;doc.MotivoDevolucao=null;
+  RES.forEach(k=>doc[k]=null);doc.ValorMensal=null;doc.ValorJSON=null;doc.VersaoRegra=null;doc.ParamsJSON=null;doc.MotivoDevolucao=!concl&&old?.MotivoDevolucao||null;
   doc.Exemplo=!!old?.Exemplo;doc.CriadoPor=old?.CriadoPor||me;doc.AtualizadoEm=now;
   let rev=old?.Revisao||1,para="Rascunho";
   if(concl){Object.assign(doc,calc(r,S.params));{const vv=valorar(doc,doc,S.val);doc.ValorMensal=vv.total;doc.ValorJSON=JSON.stringify(vv)}doc.VersaoRegra=S.params.VersaoRegra;doc.ParamsJSON=JSON.stringify(S.params);para="Em validação";if(old?.Status==="Validado"||old?.Status==="Homologado")rev++}

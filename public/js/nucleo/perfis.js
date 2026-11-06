@@ -42,7 +42,7 @@ const gersVis=()=>GER.filter(g=>UCS.some(u=>u[2]===g&&ucInScope(u)));
 /* Abas: a união das abas de cada perfil, na ordem fixa abaixo. */
 function tabsFor(){
   const ps=perfisAtivos();if(!ps.length)return[["acc","Acesso"]];
-  const M={admin:["painel","form","reg","exp","acc","par","guia"],gestor:["minha","painel","form","reg","guia"],gerente:["painel","reg","guia"],validador:["painel","reg","exp","guia"],final:["painel","exp","guia"]};
+  const M={admin:["painel","form","reg","exp","acc","par","guia"],gestor:["minha","painel","form","reg","exp","guia"],gerente:["painel","reg","guia"],validador:["painel","reg","exp","guia"],final:["painel","exp","guia"]};
   const vis=new Set(ps.flatMap(p=>M[p]||[]));
   const reg=soPerfil("gerente")?"Aprovações":soPerfil("validador")?"Validação final":"Registros";
   const T={minha:"Minhas UCs",painel:"Painel gerencial",form:"Preenchimento",reg,exp:"Exportar",acc:"Acessos",par:"Parâmetros",guia:"Guia do painel"};
