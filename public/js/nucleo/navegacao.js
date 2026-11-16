@@ -28,7 +28,7 @@ function aplicarRota(){
   const r=lerRota();
   if($("#dlg").open&&!r.id)$("#dlg").close();
   if(r.view&&r.view!==S.view){
-    if(r.view!=="form"){S.form=null;S.edit=null}
+    if(r.view!=="form"){if(S.view==="form")autoFlush();S.form=null;S.edit=null}
     S.view=r.view;render();window.scrollTo({top:0});
   }
   if(r.id&&r.id!==S.openId){S.pendingRec=r.id;abrirPendente()}
@@ -40,7 +40,7 @@ function abrirPendente(){
   S.pendingRec=null;openRec(id);
 }
 
-function go(v){S.view=v;S._push=true;render();window.scrollTo({top:0})}
+function go(v){if(S.view==="form"&&v!=="form")autoFlush();S.view=v;S._push=true;render();window.scrollTo({top:0})}
 function renderTabs(){
   const tb=tabsFor();if(!tb.some(t=>t[0]===S.view))S.view=tb[0][0];
   $("#tabs").innerHTML=tb.map(([k,l])=>`<button role="tab" data-view="${k}" aria-selected="${k===S.view}">${l}</button>`).join("");

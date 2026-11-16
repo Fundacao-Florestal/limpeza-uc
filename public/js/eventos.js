@@ -23,7 +23,7 @@ document.addEventListener("click",e=>{
   else if(a==="filaH"){S.fSt="Validado";S.fGer="";go("reg")}
   else if(a==="homologar")transition(t.dataset.id,"Homologado","");
   else if(a==="novo"){S.form=newForm();S.edit=null;go("form")}
-  else if(a==="cancelar"){const was=!!S.edit;S.form=null;S.edit=null;go(was?(tem("gestor")?"minha":"reg"):(tem("gestor")?"minha":"painel"))}
+  else if(a==="cancelar"){autoFlush().then(()=>{const was=!!S.edit;S.form=null;S.edit=null;go(was?(tem("gestor")?"minha":"reg"):(tem("gestor")?"minha":"painel"))})}
   else if(a==="rascunho")submit(false);
   else if(a==="concluir")submit(true);
   else if(a==="concluirmais")submit(true,true);
@@ -97,3 +97,5 @@ window.addEventListener("popstate",aplicarRota);
 document.addEventListener("click",e=>{const m=e.target.closest("[data-fbmode]");if(m){fbMode(m.dataset.fbmode);return}const t=e.target.closest("[data-fb]");if(t&&t.dataset.fb==="logout"&&S.auth){S.loginOk="";S.auth.signOut()}});
 document.addEventListener("submit",e=>{const f=e.target.closest("[data-fbform]");if(!f)return;e.preventDefault();fbEmail(f.dataset.fbform)});
 boot();
+/* Fechar a aba com alteração pendente: tenta gravar e pede confirmação. */
+window.addEventListener("beforeunload",e=>{if(S.view==="form"&&(AUTO.t||AUTO.p)){autoSalvar();e.preventDefault();e.returnValue=""}});
