@@ -20,7 +20,8 @@ function vVal(){
   <div class="fields"><label class="f wide">Versão da tabela<input type="text" id="v_Versao" value="${esc(v.Versao)}" ${ed?"":"disabled"}></label>
   <label class="f">Regime de licitação<select id="v_Regime" ${ed?"":"disabled"}><option value="ampla" ${v.Regime==="ampla"?"selected":""}>Participação ampla (acima de R$ 80 mil/ano)</option><option value="restrita" ${v.Regime==="restrita"?"selected":""}>Participação restrita a ME/EPP</option></select></label>
   <label class="f">Fator de reajuste (1 = data-base)${inp("v_Fator",v.Fator)}</label>
-  <label class="f">Limite de pequenas áreas (m², construído + externo)${inp("v_LimitePequena",v.LimitePequena)}</label></div>
+  <label class="f">Limite de pequenas áreas (m², construído + externo)${inp("v_LimitePequena",v.LimitePequena)}</label>
+  <label class="f">Estrutura sem uso: dias de limpeza de manutenção por semana (0 a 6; 0 = sem valor)${inp("v_SemUsoDias",v.SemUsoDias)}</label></div>
   <div class="tw vt" style="margin-top:12px"><table><thead><tr><th>Serviço (R$/m²/mês)</th>${cols.map(c=>`<th class="n">${c[2]}</th>`).join("")}</tr></thead><tbody>
   ${ITEMS.map(i=>`<tr><td>${i[1]}</td>${cols.map(([rg,tb])=>`<td class="n">${inp(`v_${rg}_${tb}_${i[0]}`,v[rg][tb][i[0]])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
   <div class="tw vt" style="margin-top:12px"><table><thead><tr><th>Parques estaduais (Apêndice 3)</th><th class="n">Ampla</th><th class="n">Restrita</th></tr></thead><tbody>
@@ -29,7 +30,7 @@ function vVal(){
   <div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="salvarval" ${ed?"":"disabled"}>Publicar tabela</button><button class="btn" data-act="padraoval" ${ed?"":"disabled"}>Restaurar CadTerc jan/2026</button></div></div>`;
 }
 function readVal(){
-  const v={Versao:$("#v_Versao").value.trim()||VDEF.Versao,Regime:$("#v_Regime").value,Fator:Number($("#v_Fator").value),LimitePequena:Number($("#v_LimitePequena").value)};
+  const v={Versao:$("#v_Versao").value.trim()||VDEF.Versao,Regime:$("#v_Regime").value,Fator:Number($("#v_Fator").value),LimitePequena:Number($("#v_LimitePequena").value),SemUsoDias:Number($("#v_SemUsoDias").value)};
   ["ampla","restrita"].forEach(rg=>{v[rg]={geral:{},pequena:{},parque:{}};["geral","pequena"].forEach(tb=>ITEMS.forEach(i=>v[rg][tb][i[0]]=Number($(`#v_${rg}_${tb}_${i[0]}`).value)));["varr","posto8","posto16"].forEach(k=>v[rg].parque[k]=Number($(`#v_${rg}_parque_${k}`).value))});
   return v;
 }
@@ -38,13 +39,14 @@ function valErr(v){
   if(all.some(n=>!isFinite(n)||n<0))e.push("Todos os valores devem ser números não negativos.");
   if(!(v.Fator>0))e.push("O fator de reajuste deve ser positivo.");
   if(!(v.LimitePequena>0))e.push("O limite de pequenas áreas deve ser positivo.");
+  if(!(v.SemUsoDias>=0&&v.SemUsoDias<=6))e.push("Os dias de manutenção de estrutura sem uso devem estar entre 0 e 6.");
   return e;
 }
 async function saveVal(){
   const v=readVal(),e=valErr(v);$("#verr").innerHTML=e.map(t=>`<li>${esc(t)}</li>`).join("");if(e.length)return;
   try{if(S.db)await S.db.doc("config/valores").set(v);S.val=dm(VDEF,v);toast("Tabela de valores publicada. Vale para novos envios; registros já enviados mantêm o valor da época.");render()}catch(x){toast("Não foi possível gravar: "+(x.message||x.code))}
 }
-function fillVal(v){$("#v_Versao").value=v.Versao;$("#v_Regime").value=v.Regime;$("#v_Fator").value=v.Fator;$("#v_LimitePequena").value=v.LimitePequena;["ampla","restrita"].forEach(rg=>{["geral","pequena"].forEach(tb=>ITEMS.forEach(i=>$(`#v_${rg}_${tb}_${i[0]}`).value=v[rg][tb][i[0]]));["varr","posto8","posto16"].forEach(k=>$(`#v_${rg}_parque_${k}`).value=v[rg].parque[k])})}
+function fillVal(v){$("#v_Versao").value=v.Versao;$("#v_Regime").value=v.Regime;$("#v_Fator").value=v.Fator;$("#v_LimitePequena").value=v.LimitePequena;$("#v_SemUsoDias").value=v.SemUsoDias;["ampla","restrita"].forEach(rg=>{["geral","pequena"].forEach(tb=>ITEMS.forEach(i=>$(`#v_${rg}_${tb}_${i[0]}`).value=v[rg][tb][i[0]]));["varr","posto8","posto16"].forEach(k=>$(`#v_${rg}_parque_${k}`).value=v[rg].parque[k])})}
 
 async function savePar(){
   const p={VersaoRegra:$("#p_VersaoRegra").value.trim()||DEF.VersaoRegra};

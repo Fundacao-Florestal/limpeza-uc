@@ -14,7 +14,10 @@ Object.assign(LBL,{A_frio:"Pisos frios",A_acarp:"Pisos acarpetados",A_lab:"Labor
    ampla: Quadro 38 (geral), Quadro 161 (pequenas áreas, Apêndice 4), Quadro 145 (parques, Apêndice 3).
    vidTriS/vidSemS/vidTriR/vidSemR: vidros externos, trimestral ou semestral, sem (S) ou com (R) exposição a risco.
    restrita (ME/EPP): Quadro 84 (geral), Quadro 178 (pequenas áreas), Quadro 154 (parques). */
-const VDEF={Versao:"CadTerc Vol. 03 · data-base jan/2026 (versão 1, ago/2026)",Regime:"ampla",Fator:1,LimitePequena:750,
+/* SemUsoDias: estrutura sem uso atual (0 dia por semana) recebe limpeza de manutenção nesse número de dias por semana.
+   A tabela CadTerc pressupõe limpeza de 2ª a sábado (6 dias), então o valor é proporcional: SemUsoDias ÷ 6.
+   Pátios e vidros já têm frequência própria e não são reduzidos. 0 = estrutura sem uso não tem valor. */
+const VDEF={Versao:"CadTerc Vol. 03 · data-base jan/2026 (versão 1, ago/2026)",Regime:"ampla",Fator:1,LimitePequena:750,SemUsoDias:1,
  ampla:{
   geral:{frio:8.89,acarp:8.89,lab:16.15,almox:3.95,ofic:4.45,saguao:6.68,sanGC:10.84,pav:4.45,varr:0.91,patAlta:0.83,patMedia:0.42,patBaixa:0.21,vidTriS:2.71,vidSemS:2.53,vidTriR:3.45,vidSemR:2.89},
   pequena:{frio:11.71,acarp:11.71,lab:21.26,almox:5.21,ofic:5.85,saguao:8.78,sanGC:15.60,pav:5.85,varr:1.20,patAlta:1.00,patMedia:0.50,patBaixa:0.25,vidTriS:3.27,vidSemS:3.04,vidTriR:4.13,vidSemR:3.47},
@@ -41,16 +44,20 @@ function valorar(r,x,v){
   const pequena=(ai+ae)<=v.LimitePequena,U=pequena?T.pequena:T.geral,parque=r.Categoria==="Parque Estadual",fator=v.Fator>0?v.Fator:1;
   const tb=pequena?"pequena":"geral",hpm=PROD.jor[tb].hs*4.35;
   const base={v:2,tabela:tb,regime:v.Regime,fator,versao:v.Versao,limite:v.LimitePequena,parque,jornada:pequena?"24 h por semana (meio período), 2ª a sábado":"44 h por semana, 2ª a sábado"};
-  if(Number(r.Dias)===0)return{...base,linhas:[],total:0,semUso:true,eq:0,enc:0,hm:0,dias:0};
+  const fechada=Number(r.Dias)===0,manutDias=Math.min(6,Math.max(0,Number(v.SemUsoDias)||0)),fm=fechada?manutDias/6:1;
+  if(fechada&&!(fm>0))return{...base,linhas:[],total:0,semUso:true,eq:0,enc:0,hm:0,dias:0};
+  /* Pátios (alta, média, baixa) e vidros têm frequência própria: não entram no fator de manutenção. */
+  const fk=k=>/^pat|^vid/.test(k)?1:fm;
   const g=k=>Math.max(0,Number(r["A_"+k])||0),L=[];
   const R=(n,d)=>Math.round(n*d)/d;
-  const add=(k,rot,a,pr,uni)=>{const t=R(a*pr*fator,100);if(!(a>0))return;
+  const add=(k,rot,a,pr,uni)=>{const f=fk(k),t=R(a*pr*fator*f,100);if(!(a>0))return;
     let eq=0,hm=0,dias=PROD.jor[tb].dias;const pi=["patAlta","patMedia","patBaixa"].indexOf(k);
     if(pi>=0){hm=a/PROD.pat[tb]*PROD.patH[tb][pi];eq=hm/hpm}
     else if(k==="varr"&&parque){eq=a/PROD.geral.varr;hm=eq*PROD.jor.parque.hs*4.35;dias=PROD.jor.parque.dias}
     else if(PROD[tb][k]){eq=a/PROD[tb][k];hm=eq*hpm}
-    L.push({k,r:rot,a:R(a,100),pr,t,uni:uni||"m²",eq:R(eq,1000),hm:R(hm,10),dias})};
-  const sanQ=r.Sanitario===1&&r.Publico===1&&(x.ClasseSan==="SAN-3"||x.ClasseSan==="SAN-4");
+    eq*=f;hm*=f;if(f<1)dias=manutDias;
+    L.push({k,r:rot,a:R(a,100),pr:R(pr*f,10000),t,uni:uni||"m²",eq:R(eq,1000),hm:R(hm,10),dias})};
+  const sanQ=!fechada&&r.Sanitario===1&&r.Publico===1&&(x.ClasseSan==="SAN-3"||x.ClasseSan==="SAN-4");
   const sanA=sanQ?as:0;
   const remI=Math.max(0,ai-g("acarp")-g("lab")-g("almox")-g("ofic")-g("saguao")-sanA);
   /* Registros antigos, sem pisos frios declarados: em galpão/oficina o restante vira almoxarifado. */
@@ -80,12 +87,13 @@ function valorar(r,x,v){
     L.push({k,r:"Vidros externos · "+(tri?"trimestral":"semestral")+(risco?", com risco (balancim/andaime)":", sem risco"),a:R(av,100),pr:U[k],t:R(av*U[k]*fator,100),uni:"m²",eq:R(hm/hpm,1000),hm:R(hm,10),dias:PROD.jor[tb].dias});
   }
   const eqT=R(L.reduce((s,l)=>s+l.eq,0),1000),hmT=R(L.reduce((s,l)=>s+l.hm,0),10);
-  return{...base,linhas:L,total:Math.round(L.reduce((s,l)=>s+l.t,0)*100)/100,semUso:false,eq:eqT,enc:R(eqT*PROD.ENC,1000),hm:hmT,dias:L.reduce((m,l)=>Math.max(m,l.dias),0)};
+  return{...base,linhas:L,total:Math.round(L.reduce((s,l)=>s+l.t,0)*100)/100,semUso:false,manut:fechada?manutDias:0,eq:eqT,enc:R(eqT*PROD.ENC,1000),hm:hmT,dias:L.reduce((m,l)=>Math.max(m,l.dias),0)};
 }
 function valorRec(x){if(!hasRes(x))return null;if(x.ValorJSON){try{const j=JSON.parse(x.ValorJSON);if(j&&j.v===2&&typeof j.total==="number")return j}catch{}}return valorar(x,x,S.val)}
 function valTable(vv){
   if(!vv)return"";
   if(vv.semUso)return `<p class="note">Estrutura sem uso atual (0 dia por semana): valor referencial zero.</p>`;
   const q=l=>l.uni==="posto"?"1 posto":f2(l.a)+" m²";
-  return `<h3 style="font-size:14px;margin-top:14px">Valor referencial mensal</h3><div class="tw"><table><thead><tr><th>Serviço</th><th class="n">Quantidade</th><th class="n">Unitário</th><th class="n">R$/mês</th></tr></thead><tbody>${vv.linhas.map(l=>`<tr><td>${esc(l.r)}</td><td class="n">${q(l)}</td><td class="n">${f2(l.pr*vv.fator)}</td><td class="n">${f2(l.t)}</td></tr>`).join("")||`<tr><td colspan="4" class="empty">Sem áreas informadas.</td></tr>`}</tbody><tfoot><tr><td colspan="3">Total</td><td class="n">${f2(vv.total)}</td></tr></tfoot></table></div><p class="note">Tabela ${vv.tabela==="pequena"?`de pequenas áreas (construído e externo até ${f0(vv.limite)} m²)`:"geral"} · ${vv.regime==="ampla"?"participação ampla":"participação restrita a ME/EPP"} · fator de reajuste ${vv.fator} · ${esc(vv.versao)}. Estimativa de referência, não é preço contratado.</p>${vv.semUso?"":`<p class="note">Equipe e horas: estimativa gerencial pelos coeficientes de participação do CadTerc (jornada de referência: ${esc(vv.jornada)}; 1 encarregado para 30 profissionais). Não deve constar do edital (item 1.11 do documento).</p>`}`;
+  const mn=vv.manut?`<p class="note">Estrutura sem uso atual: limpeza de manutenção ${vv.manut} dia${vv.manut>1?"s":""} por semana, ${f2(vv.manut/6*100)}% do valor unitário (o CadTerc pressupõe 6 dias por semana). Pátios e vidros mantêm a frequência própria.</p>`:"";
+  return `<h3 style="font-size:14px;margin-top:14px">Valor referencial mensal</h3><div class="tw"><table><thead><tr><th>Serviço</th><th class="n">Quantidade</th><th class="n">Unitário</th><th class="n">R$/mês</th></tr></thead><tbody>${vv.linhas.map(l=>`<tr><td>${esc(l.r)}</td><td class="n">${q(l)}</td><td class="n">${f2(l.pr*vv.fator)}</td><td class="n">${f2(l.t)}</td></tr>`).join("")||`<tr><td colspan="4" class="empty">Sem áreas informadas.</td></tr>`}</tbody><tfoot><tr><td colspan="3">Total</td><td class="n">${f2(vv.total)}</td></tr></tfoot></table></div><p class="note">Tabela ${vv.tabela==="pequena"?`de pequenas áreas (construído e externo até ${f0(vv.limite)} m²)`:"geral"} · ${vv.regime==="ampla"?"participação ampla":"participação restrita a ME/EPP"} · fator de reajuste ${vv.fator} · ${esc(vv.versao)}. Estimativa de referência, não é preço contratado.</p>${vv.semUso?"":`<p class="note">Equipe e horas: estimativa gerencial pelos coeficientes de participação do CadTerc (jornada de referência: ${esc(vv.jornada)}; 1 encarregado para 30 profissionais). Não deve constar do edital (item 1.11 do documento).</p>`}${mn}`;
 }
