@@ -122,3 +122,25 @@ test("área sanitária tem de caber nos pisos frios", () => {
   assert.ok(erros(r).err.some((t) => t.includes("área sanitária faz parte dos pisos frios")));
   assert.ok(!erros({ ...r, AreaSanitaria: 50 }).err.some((t) => t.includes("área sanitária")));
 });
+
+test("estrutura sem uso recebe limpeza de manutenção proporcional (padrão 1 dia por semana)", () => {
+  // Caso do oratório da FEENA: 24 m² de pisos frios e 11,25 m² de pavimentados, fechado.
+  const r = { ...base(), Dias: 0, Horas: 0, AreaInterna: 24, A_frio: 24, A_saguao: 0, AreaExterna: 11.25, A_pav: 11.25, A_varr: 0 };
+  const v = linhas(r);
+  assert.equal(v.semUso, false);
+  assert.equal(v.manut, 1);
+  assert.equal(linha(v, "frio").t, Math.round(24 * VDEF.ampla.pequena.frio / 6 * 100) / 100);
+  assert.equal(linha(v, "pav").t, Math.round(11.25 * VDEF.ampla.pequena.pav / 6 * 100) / 100);
+  assert.ok(v.total > 0);
+  const cheio = linhas({ ...r, Dias: 6, Horas: 8 });
+  assert.ok(Math.abs(v.total - cheio.total / 6) < 0.02);
+});
+
+test("pátios não são reduzidos em estrutura sem uso; SemUsoDias 0 volta a valor zero", () => {
+  const r = { ...base(), Dias: 0, Horas: 0, AreaExterna: 500, A_pav: 0, A_patBaixa: 500 };
+  const v = linhas(r);
+  assert.equal(linha(v, "patBaixa").t, Math.round(500 * VDEF.ampla.geral.patBaixa * 100) / 100);
+  const x = calc(r, DEF), z = valorar({ ...r, ...x }, x, { ...VDEF, SemUsoDias: 0 });
+  assert.equal(z.semUso, true);
+  assert.equal(z.total, 0);
+});
